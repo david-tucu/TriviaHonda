@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Mobile Trivia</title>
+  <style>
+    body { font-family: sans-serif; margin: 30px; background-color: #999;}
+    button {
+      display:block; width: 100%; padding: 20px;
+      margin: 10px 0; font-size: 22px;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Esperando pregunta…</h2>
+
+<div id="opciones" style="display:none;">
+  <button onclick="enviarRespuesta('A')">A</button>
+  <button onclick="enviarRespuesta('B')">B</button>
+  <button onclick="enviarRespuesta('C')">C</button>
+  <button onclick="enviarRespuesta('D')">D</button>
+</div>
+
+<!-- Socket.io client -->
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+  // Auto-detecta localhost o Render
+  const socket = io();
+
+  socket.on("connect", () => {
+    console.log("Conectado al backend");
+  });
+
+  // Cuando el admin envía una nueva pregunta
+  socket.on("preguntaActiva", (data) => {
+    document.querySelector("h2").textContent =
+      "Pregunta activa: " + data.id;
+
+    document.getElementById("opciones").style.display = "block";
+  });
+
+  // Confirmación de respuesta guardada
+  socket.on("respuestaOk", () => {
+    alert("Respuesta guardada");
+  });
+
+  // Enviar respuesta al servidor
+  function enviarRespuesta(opcion) {
+    socket.emit("respuesta", {
+      opcion: opcion,
+      // luego podes agregar dni, nombre, lo que quieras
+    });
+  }
+</script>
+
+</body>
+</html>

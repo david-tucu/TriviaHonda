@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Test Socket.io</title>
+</head>
+<body>
+
+<h1>Test Socket.io</h1>
+
+<!-- Cliente de Socket.io -->
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+<script>
+  // Conexión al servidor Node
+  const socket = io("http://localhost:3000");
+
+  socket.on("connect", () => {
+    console.log("Conectado al servidor");
+
+    socket.emit("respuesta", {
+      nombre: "David",
+      dni: "123",
+      respuesta: "A"
+    });
+  });
+
+  socket.on("respuestaOk", () => {
+    console.log("El servidor confirmó mi respuesta");
+  });
+
+  socket.on("preguntaActiva", data => {
+    console.log("Nueva pregunta activa:", data);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("Desconectado del servidor");
+  });
+</script>
+
+</body>
+</html>

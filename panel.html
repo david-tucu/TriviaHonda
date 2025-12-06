@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Panel Admin</title>
+  <style>
+    button { padding: 15px; font-size: 20px; margin: 10px; }
+  </style>
+</head>
+<body>
+
+<h1>Admin Trivia</h1>
+
+<button onclick="enviarPregunta(1)">Pregunta 1</button>
+<button onclick="enviarPregunta(2)">Pregunta 2</button>
+<button onclick="enviarPregunta(3)">Pregunta 3</button>
+<button onclick="enviarPregunta(4)">Pregunta 4</button>
+
+<script>
+function enviarPregunta(id) {
+  fetch('/admin/pregunta', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: id })
+  })
+  .then(res => res.json())
+  .then(data => {
+    console.log("Pregunta enviada", data);
+    alert("Pregunta activa: " + id);
+  });
+}
+</script>
+
+</body>
+</html>
