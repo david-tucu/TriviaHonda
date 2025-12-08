@@ -71,7 +71,7 @@ app.get('/test', (req, res) => {
 
 // Servir el panel en /panel
 app.get("/panel", (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'panel.html'));
+  res.sendFile(__dirname + "/panel.html");
 });
 
 // Cambiar pregunta desde el panel admin
