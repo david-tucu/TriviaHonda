@@ -6,6 +6,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+//para las rutas de servicios:
+const path = require('path'); // Agrega esto al inicio del archivo
+
 // Servidor HTTP
 const server = http.createServer(app);
 
@@ -68,7 +71,7 @@ app.get('/test', (req, res) => {
 
 // Servir el panel en /panel
 app.get("/panel", (req, res) => {
-  res.sendFile(__dirname + "/panel.html");
+  res.sendFile(path.join(__dirname, 'public', 'panel.html'));
 });
 
 // Cambiar pregunta desde el panel admin
@@ -92,8 +95,10 @@ app.get('/admin/respuestas', (req, res) => {
 app.use(express.static('public'));
 
 
+// CORRECCIÓN 1: Usar la variable de entorno PORT
+const PORT = process.env.PORT || 3000; 
 
 // Iniciar servidor
-server.listen(3000, () => {
-  console.log('Servidor trivia activo en http://localhost:3000');
+server.listen(PORT, () => {
+  console.log(`Servidor trivia activo en el puerto ${PORT}`);
 });
