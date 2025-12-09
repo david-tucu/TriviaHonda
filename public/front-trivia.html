@@ -112,6 +112,9 @@
       } else {
         btnLogout.style.display = 'none';
 
+        document.getElementById("main-message").textContent = "Ingresá tus datos para participar.";
+        document.getElementById("spinner").classList.add('d-none'); // Asegurarse que esté oculto
+
         const modal = new bootstrap.Modal(document.getElementById('modalIngreso'), {});
         modal.show();
       }
@@ -307,10 +310,16 @@
 
     socket.on("connect", () => {
       console.log("Conectado al backend. DNI:", userData.dni);
+      // 🔑 CAMBIO: QUITAMOS la configuración del mensaje de espera.
+      // El mensaje de espera solo debe aparecer si:
+      // a) El usuario ya estaba logueado (y checkLocalStorage ya lo manejo).
+      // b) El usuario acaba de hacer login exitoso (guardarDatos lo maneja).
 
-      // ESTABLECE EL ESTADO DE ESPERA Y MUESTRA EL SPINNER AL CONECTAR
-      document.getElementById("main-message").textContent = "Esperando próxima pregunta...";
-      document.getElementById("spinner").classList.remove('d-none');
+      // SOLO MOSTRAMOS EL SPINNER SI YA TENEMOS DATOS DE USUARIO
+      if (userData.dni) {
+        document.getElementById("main-message").textContent = "Esperando próxima pregunta...";
+        document.getElementById("spinner").classList.remove('d-none');
+      }
     });
 
     socket.on("error", (data) => {
