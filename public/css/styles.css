@@ -1,0 +1,20 @@
+    .container {
+        max-width: 600px;
+        margin-top: 10px;
+    }
+
+    .btn-action {
+        margin: 10px 5px;
+    }
+
+    #log-area {
+        height: 100px;
+        overflow-y: scroll;
+        background-color: #f8f9fa;
+        padding: 10px;
+        border-radius: 5px;
+    }
+
+    #message-text {
+        min-height: 50px;
+    }

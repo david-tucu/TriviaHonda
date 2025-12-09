@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Test DB</title>
+<style>
+body { font-family: Arial; padding: 20px; }
+#resultado { margin-top: 20px; }
+table { border-collapse: collapse; margin-top: 20px; }
+th, td { border: 1px solid #ccc; padding: 8px; }
+</style>
+</head>
+<body>
+
+<h1>Test de Conexión a Base de Datos</h1>
+
+<button id="btn">Probar conexión</button>
+
+<div id="resultado">Esperando acción…</div>
+
+<script>
+document.getElementById("btn").onclick = () => {
+    document.getElementById("resultado").innerHTML = "Consultando…";
+
+    fetch("/test-db")
+      .then(r => r.json())
+      .then(data => {
+        if (!data.ok) {
+          document.getElementById("resultado").innerHTML =
+            "<b>Error:</b> " + data.error;
+          return;
+        }
+
+        if (data.data.length === 0) {
+          document.getElementById("resultado").innerHTML = "No hay usuarios.";
+          return;
+        }
+
+        let html = "<table><tr>";
+
+        // Encabezados dinámicos
+        const cols = Object.keys(data.data[0]);
+        cols.forEach(c => html += `<th>${c}</th>`);
+        html += "</tr>";
+
+        // Filas
+        data.data.forEach(row => {
+          html += "<tr>";
+          cols.forEach(c => html += `<td>${row[c]}</td>`);
+          html += "</tr>";
+        });
+
+        html += "</table>";
+
+        document.getElementById("resultado").innerHTML = html;
+      })
+      .catch(err => {
+        document.getElementById("resultado").textContent =
+          "Error de conexión: " + err;
+      });
+};
+</script>
+
+</body>
+</html>
