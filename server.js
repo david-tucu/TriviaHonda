@@ -84,6 +84,8 @@ io.on('connection', socket => {
     const pregunta = getPreguntaPorId(preguntaActivaId);
     if (pregunta) {
       socket.emit('preguntaActiva', getPreguntaSinRespuesta(pregunta));
+      // 💡 Al hacer Late Join, también notificamos que la votación está activa.
+      socket.emit('estadoJuego', { status: 'aResponder' });
     }
   }
 
@@ -145,6 +147,11 @@ io.on('connection', socket => {
 
     if (broadcastEvent) {
         io.emit(broadcastEvent, broadcastPayload);
+        
+        // 🔑 AGREGAR LA SEÑAL DE "A RESPONDER" JUSTO DESPUÉS DE ENVIAR LA PREGUNTA
+        if (action === 'mostrarPregunta') {
+             io.emit('estadoJuego', { status: 'aResponder' });
+        }
     }
 
     socket.emit('actionConfirmed', { action, success: !!broadcastEvent, event: broadcastEvent });
@@ -210,7 +217,8 @@ app.get('/admin/preguntas', (req, res) => res.json(ALL_QUESTIONS));
 
 
 // --- Test DB (PostgreSQL) ---
-const pool = require('./db');
+// ⚠️ Asegúrate de que el archivo './db' exista y exporte el pool de conexión
+const pool = require('./db'); 
 app.get('/test-db', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM usuarios ORDER BY id DESC LIMIT 200');
