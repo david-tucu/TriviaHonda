@@ -7,6 +7,9 @@ const path = require('path');
 // Socket.IO
 const { Server } = require('socket.io');
 
+// 🔑 CARGAR PREGUNTAS (Asegúrate de que este archivo exista y use module.exports)
+const ALL_QUESTIONS = require('./questions'); 
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -19,6 +22,34 @@ const io = new Server(server, {
     methods: ["GET", "POST"]
   }
 });
+
+
+// --- FUNCIONES DE UTILIDAD ---
+
+/** Obtiene una pregunta por su ID. */
+const getPreguntaPorId = (id) => {
+    // Busca por ID, asegurando la comparación con el mismo tipo (parseInt)
+    return ALL_QUESTIONS.find(q => q.id === parseInt(id)); 
+};
+
+/**
+ * Filtra la pregunta para NO incluir la respuesta correcta antes de enviarla al cliente.
+ * @param {object} pregunta
+ * @returns {object} La pregunta sin la propiedad 'correcta'.
+ */
+const getPreguntaSinRespuesta = (pregunta) => {
+    if (!pregunta) return null;
+    // Usamos destructuring para extraer 'correcta' y capturar el resto en 'preguntaLimpia'
+    const { correcta, ...preguntaLimpia } = pregunta; 
+    return preguntaLimpia;
+};
+
+/** Verifica si la respuesta elegida es la correcta. */
+const esRespuestaCorrecta = (id, respuesta) => {
+    const pregunta = getPreguntaPorId(id);
+    return pregunta && pregunta.correcta === respuesta;
+};
+
 
 // --- Redis Adapter solo en producción ---
 if (process.env.NODE_ENV === 'production' && process.env.REDIS_URL) {
@@ -41,15 +72,19 @@ if (process.env.NODE_ENV === 'production' && process.env.REDIS_URL) {
 }
 
 // --- Variables de estado ---
-let preguntaActiva = null;
-let respuestas = []; // memoria temporal
+let preguntaActivaId = null; // ID de la pregunta activa
+let respuestas = []; // memoria temporal de respuestas
 
 // --- Lógica Socket.IO ---
 io.on('connection', socket => {
   console.log('Cliente conectado:', socket.id);
 
-  if (preguntaActiva !== null) {
-    socket.emit('preguntaActiva', { id: preguntaActiva });
+  // LATE JOIN: Si hay pregunta activa, enviarla al nuevo cliente (sin la respuesta)
+  if (preguntaActivaId !== null) {
+    const pregunta = getPreguntaPorId(preguntaActivaId);
+    if (pregunta) {
+      socket.emit('preguntaActiva', getPreguntaSinRespuesta(pregunta));
+    }
   }
 
   socket.on('adminAction', data => {
@@ -59,31 +94,52 @@ io.on('connection', socket => {
 
     switch(action) {
         case 'mostrarPregunta':
-            preguntaActiva = payload;
-            broadcastEvent = 'preguntaActiva';
-            broadcastPayload = { id: payload, estado: 'activa' };
+            preguntaActivaId = payload; // payload debe ser el ID de la pregunta (e.g., 1)
+            const pregunta = getPreguntaPorId(preguntaActivaId);
+
+            if (pregunta) {
+                broadcastEvent = 'preguntaActiva';
+                // ENVIAR LA PREGUNTA COMPLETA (PERO LIMPIA)
+                broadcastPayload = getPreguntaSinRespuesta(pregunta); 
+            } else {
+                console.error(`Error: Pregunta con ID ${preguntaActivaId} no encontrada.`);
+                socket.emit('error', { msg: 'Pregunta no encontrada.' });
+                return; // Salir sin emitir
+            }
             break;
+
         case 'destacarRespuesta':
+            // Esta acción usa la pregunta activa actual para obtener la respuesta correcta
+            const pregActual = getPreguntaPorId(preguntaActivaId); 
+            
             broadcastEvent = 'estadoJuego';
-            broadcastPayload = { status: 'respuestaMostrada', respuestaCorrecta: payload };
+            broadcastPayload = { 
+                status: 'respuestaMostrada', 
+                respuestaCorrecta: pregActual ? pregActual.correcta : null 
+            };
             break;
+
         case 'irAInicio':
-            preguntaActiva = null;
+            preguntaActivaId = null; // Limpiar la pregunta activa
             broadcastEvent = 'estadoJuego';
             broadcastPayload = { status: 'inicio' };
             break;
+            
         case 'pantallaRanking':
             broadcastEvent = 'pantallaPrincipal';
             broadcastPayload = { view: 'ranking' };
             break;
+            
         case 'mostrarRanking':
             broadcastEvent = 'estadoJuego';
             broadcastPayload = { status: 'ganadoresMostrados' };
             break;
+            
         case 'limpiarRespuestas':
             respuestas = [];
             console.log('Respuestas limpiadas.');
             break;
+            
         default: break;
     }
 
@@ -95,12 +151,39 @@ io.on('connection', socket => {
   });
 
   socket.on('respuesta', data => {
-    if (preguntaActiva !== null) {
-        respuestas.push({ ...data, tiempo: Date.now() });
-        socket.emit('respuestaOk');
-    } else {
-        socket.emit('error', { msg: 'No hay pregunta activa.' });
+    const { dni, id_pregunta, respuesta, nombre } = data;
+
+    if (preguntaActivaId === null || id_pregunta !== preguntaActivaId) {
+        socket.emit('error', { msg: 'No hay pregunta activa o ID incorrecto.' });
+        return;
     }
+
+    // 1. VALIDAR SI EL DNI YA VOTÓ ESTA PREGUNTA
+    const yaVoto = respuestas.some(r => 
+        r.dni === dni && r.id_pregunta === id_pregunta
+    );
+
+    if (yaVoto) {
+        socket.emit('error', { msg: 'DNI ya votó esta pregunta' });
+        return;
+    }
+
+    // 2. DETERMINAR SI LA RESPUESTA ES CORRECTA
+    const esCorrecta = esRespuestaCorrecta(id_pregunta, respuesta);
+
+    // 3. GUARDAR RESPUESTA
+    respuestas.push({ 
+        dni, 
+        nombre,
+        id_pregunta, 
+        respuesta_elegida: respuesta, 
+        es_correcta: esCorrecta,
+        tiempo_respuesta: Date.now(),
+    });
+    
+    console.log(`Voto registrado: DNI ${dni}, Pregunta ${id_pregunta}, Respuesta ${respuesta}, Correcta: ${esCorrecta}`);
+
+    socket.emit('respuestaOk');
   });
 
   socket.on('disconnect', () => {
@@ -121,7 +204,10 @@ app.get('/panel', (req, res) => {
   res.sendFile(path.join(__dirname, 'panel.html'));
 });
 
+// ENDPOINTS ADMIN
 app.get('/admin/respuestas', (req, res) => res.json(respuestas));
+app.get('/admin/preguntas', (req, res) => res.json(ALL_QUESTIONS));
+
 
 // --- Test DB (PostgreSQL) ---
 const pool = require('./db');
@@ -131,29 +217,22 @@ app.get('/test-db', async (req, res) => {
     res.json({ ok: true, data: result.rows });
   } catch (err) {
     console.error('Error /test-db:', err);
-    res.json({ ok: false, error: err.message });
+    res.status(500).json({ ok: false, error: err.message });
   }
 });
 
 // --- ENDPOINT: Últimas 200 Participaciones ---
 app.get('/test-db-200', async (req, res) => {
   try {
-    // Consulta SQL para obtener las 200 respuestas más recientes.
-    // ORDER BY id DESC asegura que las más nuevas aparezcan primero.
     const result = await pool.query(
       'SELECT id, dni_jugador, id_pregunta, respuesta_elegida, es_correcta, tiempo_respuesta FROM respuestas ORDER BY id DESC LIMIT 200'
     );
-    
-    // Devolver un objeto JSON con ok: true y los datos.
     res.json({ ok: true, data: result.rows });
   } catch (err) {
-    // Si hay un error de conexión o de SQL, registrarlo y devolverlo al frontend.
     console.error("Error en /test-db-200:", err);
     res.status(500).json({ ok: false, error: err.message });
   }
 });
-
-
 
 
 // --- Archivos estáticos ---

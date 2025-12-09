@@ -1,59 +1,365 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
-  <title>Mobile Trivia</title>
-  <style>
-    body { font-family: sans-serif; margin: 30px; background-color: #999;}
-    button {
-      display:block; width: 100%; padding: 20px;
-      margin: 10px 0; font-size: 22px;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mobile Trivia Honda</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <link rel="stylesheet" href="css/styles.css">
 </head>
+
 <body>
+  <header class="header-honda text-center">
+    <h1 class="h4 m-0">TRIVIA HONDA</h1>
 
-<h2>Esperando pregunta…</h2>
+    <div class="d-flex justify-content-between align-items-center px-2">
+      <p class="m-0 small text-start" id="user-info"></p>
+      <button id="btnLogout" onclick="cerrarSesion()" class="btn btn-sm btn-outline-light" style="display:none;">
+        SALIR
+      </button>
+    </div>
+  </header>
 
-<div id="opciones" style="display:none;">
-  <button onclick="enviarRespuesta('A')">A</button>
-  <button onclick="enviarRespuesta('B')">B</button>
-  <button onclick="enviarRespuesta('C')">C</button>
-  <button onclick="enviarRespuesta('D')">D</button>
-</div>
+  <div class="container">
+    <div id="status-area" class="text-center mt-4">
+      <h2 id="main-message">Esperando conexión...</h2>
+      <div id="spinner" class="spinner-border text-primary d-none" role="status"></div>
+    </div>
 
-<!-- Socket.io client -->
-<script src="/socket.io/socket.io.js"></script>
+    <div id="pregunta-area" class="card p-4 mt-0 animate-in" style="display:none;">
+      <p id="pregunta-texto"></p>
+      <div id="opciones-container">
+      </div>
+      <small class="mt-3 text-muted" id="voto-status"></small>
+    </div>
 
-<script>
-  // Auto-detecta localhost o Render
-  const socket = io();
+  </div>
 
-  socket.on("connect", () => {
-    console.log("Conectado al backend");
-  });
+  <div class="modal fade" id="modalIngreso" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">¡Hola!</h5>
+        </div>
+        <div class="modal-body">
+          <p class="mb-3">Estás por conectarte a la <strong>Trivia Honda.</strong> Ingresá tus datos que registremos tu
+            participación y lugar en el ranking.</p>
 
-  // Cuando el admin envía una nueva pregunta
-  socket.on("preguntaActiva", (data) => {
-    document.querySelector("h2").textContent =
-      "Pregunta activa: " + data.id;
+          <div class="form-floating mb-3">
+            <input type="number" class="form-control" id="inputDNI" placeholder="DNI (Solo números)" required
+              maxlength="10">
+            <label for="inputDNI">DNI (Solo números)</label>
+            <div id="dniError" class="text-danger small mt-1" style="display:none;"></div>
+          </div>
 
-    document.getElementById("opciones").style.display = "block";
-  });
+          <div class="form-floating mb-3">
+            <input type="text" class="form-control" id="inputNombre" placeholder="Nombre y Apellido" required
+              maxlength="50">
+            <label for="inputNombre">Nombre y Apellido</label>
+            <div id="nombreError" class="text-danger small mt-1" style="display:none;"></div>
+          </div>
 
-  // Confirmación de respuesta guardada
-  socket.on("respuestaOk", () => {
-    alert("Respuesta guardada");
-  });
 
-  // Enviar respuesta al servidor
-  function enviarRespuesta(opcion) {
-    socket.emit("respuesta", {
-      opcion: opcion,
-      // luego podes agregar dni, nombre, lo que quieras
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary w-100" onclick="guardarDatos()">COMENZAR</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // --- VARIABLES GLOBALES DE ESTADO ---
+    let userData = {
+      dni: null,
+      nombre: null
+    };
+    let preguntaActual = null;
+    let yaVoto = false;
+
+    // Auto-detecta localhost o Render
+    const socket = io();
+    const userIconHtml = '<i class="bi bi-person-fill me-1"></i>';
+
+    // --- GESTIÓN DE MODAL Y VALIDACIÓN LOCAL ---
+
+    function checkLocalStorage() {
+      const dni = localStorage.getItem('dni');
+      const nombre = localStorage.getItem('nombre');
+      const btnLogout = document.getElementById('btnLogout');
+
+      if (dni && nombre) {
+        userData.dni = dni;
+        userData.nombre = nombre;
+        document.getElementById('user-info').innerHTML = `${userIconHtml} ${nombre} (${dni})`;
+        btnLogout.style.display = 'inline-block';
+
+        // Si hay datos, nos conectamos. El mensaje de estado lo maneja el on('connect')
+        socket.connect();
+      } else {
+        btnLogout.style.display = 'none';
+
+        const modal = new bootstrap.Modal(document.getElementById('modalIngreso'), {});
+        modal.show();
+      }
+    }
+
+    // --- GESTIÓN DE SESIÓN ---
+
+    function cerrarSesion() {
+      const confirmacion = confirm(
+        "Seguro que querés cerrar la sesión?\n\nVas a perder tu DNI y Nombre en este dispositivo y podrías perder tu progreso en la trivia si está activa."
+      );
+
+      if (confirmacion) {
+        // 1. Borrar datos de identidad
+        localStorage.removeItem('dni');
+        localStorage.removeItem('nombre');
+
+        // Limpiar todos los indicadores de voto (voto_q_X)
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('voto_q_')) {
+            localStorage.removeItem(key);
+          }
+        }
+
+        // 2. Desconectar y reiniciar
+        socket.disconnect();
+        window.location.reload();
+      }
+    }
+
+
+    function validarDNI(dni) {
+      const cleanDNI = dni.trim().replace(/\D/g, '');
+      return cleanDNI.length >= 8 && cleanDNI.length <= 10;
+    }
+
+    function validarNombre(nombre) {
+      const cleanNombre = nombre.trim();
+      if (cleanNombre.length === 0 || cleanNombre.length > 50) {
+        return false;
+      }
+      // Valida que contenga al menos un carácter que NO sea un número.
+      return /[^0-9]/.test(cleanNombre);
+    }
+
+    function guardarDatos() {
+
+      // Desenfocar el botón para evitar que retenga el foco mientras el modal se cierra
+      document.activeElement.blur();
+
+      const inputDNI = document.getElementById('inputDNI').value;
+      const inputNombre = document.getElementById('inputNombre').value;
+      const dniError = document.getElementById('dniError');
+      const nombreError = document.getElementById('nombreError');
+
+      dniError.style.display = 'none';
+      nombreError.style.display = 'none';
+
+      if (!validarDNI(inputDNI)) {
+        dniError.textContent = "El DNI no parece válido. Solo entre 8 y 10 dígitos numéricos.";
+        dniError.style.display = 'block';
+        return;
+      }
+
+      if (!validarNombre(inputNombre)) {
+        nombreError.textContent = "Hay un error en este campo. Fijate que no esté vacío, que no sean solo números y que sean menos de 50 caracteres.";
+        nombreError.style.display = 'block';
+        return;
+      }
+
+      // Si la validación es exitosa:
+      localStorage.setItem('dni', inputDNI.trim());
+      localStorage.setItem('nombre', inputNombre.trim());
+      userData.dni = inputDNI.trim();
+      userData.nombre = inputNombre.trim();
+
+      document.getElementById('user-info').innerHTML = `${userIconHtml} ${userData.nombre} (${userData.dni})`;
+      document.getElementById('btnLogout').style.display = 'inline-block';
+
+      const modal = bootstrap.Modal.getInstance(document.getElementById('modalIngreso'));
+      modal.hide();
+
+      socket.connect();
+    }
+
+
+    // --- GESTIÓN DE INTERFAZ ---
+
+    /** Dibuja los botones de respuesta y establece los listeners */
+    function renderQuestion(pregunta) {
+      // 1. Lógica de inicialización
+      preguntaActual = pregunta;
+      yaVoto = false;
+      document.getElementById("voto-status").textContent = "";
+      document.getElementById("pregunta-texto").textContent = pregunta.texto_pregunta;
+
+      // 🔑 2. OBTENER EL VOTO GUARDADO: Lee la clave de la opción (A, B, C, D)
+      const votoClave = localStorage.getItem(`voto_q_${pregunta.id}`);
+
+      // 3. Crear HTML de Opciones
+      const opcionesContainer = document.getElementById("opciones-container");
+      opcionesContainer.innerHTML = '';
+
+      pregunta.opciones.forEach(opcion => {
+        const btn = document.createElement('button');
+        // 🔑 CAMBIO CLAVE: Usamos 'btn-outline-dark' y 'btn-opcion' como base para que coincida con disableOptions
+        btn.className = 'btn btn-outline-dark btn-lg w-100 mb-2 btn-opcion';
+        btn.setAttribute('data-opcion', opcion.clave);
+        btn.textContent = `${opcion.clave}. ${opcion.texto}`;
+        btn.onclick = () => enviarRespuesta(opcion.clave, btn);
+        opcionesContainer.appendChild(btn);
+      });
+
+
+      document.getElementById("pregunta-area").style.display = "block";
+      document.getElementById("spinner").classList.add('d-none');
+
+      // 🔑 4. APLICAR ESTADO DE VOTO LOCAL Y DESTACAR
+      if (votoClave) {
+        yaVoto = true;
+        disableOptions(null); // Deshabilita todos los botones
+
+        document.getElementById("voto-status").textContent = "Tu voto ya está registrado para esta pregunta.";
+
+        // Seleccionamos el botón usando el atributo data-opcion guardado
+        const btnVotado = document.querySelector(`#opciones-container button[data-opcion="${votoClave}"]`);
+
+        if (btnVotado) {
+          // 🔑 APLICAR EL MISMO ESTILO QUE disableOptions APLICA AL VOTAR
+          btnVotado.classList.remove('btn-outline-dark');
+          btnVotado.classList.add('btn-secondary');
+          // Opcional: Si querés que diga VOTADO: btnVotado.textContent += " (VOTADO)";
+        }
+      }
+    }
+
+
+    /** Desactiva todos los botones de respuesta después de votar */
+    function disableOptions(btnSeleccionado) {
+      document.querySelectorAll('.btn-opcion').forEach(btn => {
+        btn.disabled = true;
+        if (btn === btnSeleccionado) {
+          //  ESTOS ESTILOS SON LOS QUE DEBEN COINCIDIR CON renderQuestion
+          btn.classList.remove('btn-outline-dark');
+          btn.classList.add('btn-secondary');
+          // Si quieres que el voto se destaque visualmente de todos los demás botones deshabilitados,
+          // podrías usar btn.classList.add('btn-success') aquí.
+          // Pero si el objetivo es que solo parezca deshabilitado:
+          // btn.textContent += " (VOTADO)"; // Opcional, como en tu código original
+        }
+      });
+    }
+
+    /** Vuelve a la portada de espera */
+    function volverAportada(message) {
+      preguntaActual = null;
+      yaVoto = false;
+      document.getElementById("pregunta-area").style.display = "none";
+      document.getElementById("main-message").textContent = message || "Esperando próxima pregunta...";
+      document.getElementById("spinner").classList.remove('d-none');
+    }
+
+
+    // --- COMUNICACIÓN CON EL SERVIDOR ---
+
+    function enviarRespuesta(opcion, btnSeleccionado) {
+      if (!preguntaActual || yaVoto) {
+        document.getElementById("voto-status").textContent = "Ya votaste en esta pregunta o la pregunta ha terminado.";
+        return;
+      }
+
+      // Oculta el botón
+      disableOptions(btnSeleccionado);
+      yaVoto = true;
+
+      // 🔑 1. CAMBIO: Guardar la CLAVE de la opción (A, B, C, D) en el localStorage
+      localStorage.setItem(`voto_q_${preguntaActual.id}`, opcion);
+
+      socket.emit("respuesta", {
+        dni: userData.dni,
+        nombre: userData.nombre,
+        id_pregunta: preguntaActual.id,
+        respuesta: opcion,
+        tiempo: Date.now()
+      });
+
+      document.getElementById("voto-status").textContent = `Voto enviado: Opción ${opcion}. Esperando resultados...`;
+    }
+
+
+    // --- HANDLERS DE SOCKET.IO ---
+
+    socket.on("connect", () => {
+      console.log("Conectado al backend. DNI:", userData.dni);
+
+      // ESTABLECE EL ESTADO DE ESPERA Y MUESTRA EL SPINNER AL CONECTAR
+      document.getElementById("main-message").textContent = "Esperando próxima pregunta...";
+      document.getElementById("spinner").classList.remove('d-none');
     });
-  }
-</script>
 
+    socket.on("error", (data) => {
+      if (data.msg === 'DNI ya votó esta pregunta') {
+        yaVoto = true;
+        disableOptions(null);
+        document.getElementById("voto-status").textContent = "Tu voto ya está registrado para esta pregunta.";
+      } else {
+        console.error("Error del servidor:", data.msg);
+        document.getElementById("voto-status").textContent = data.msg;
+      }
+    });
+
+    socket.on("preguntaActiva", (data) => {
+      renderQuestion(data);
+    });
+
+    socket.on("estadoJuego", (data) => {
+      if (data.status === 'inicio' || data.status === 'ganadoresMostrados') {
+        let message = (data.status === 'inicio') ?
+          "Esperando indicaciones del moderador." :
+          "";
+        volverAportada(message);
+      } else if (data.status === 'respuestaMostrada') {
+        document.getElementById("voto-status").textContent = "¡Tiempo terminado! Revisando resultados...";
+      }
+    });
+
+    socket.on("respuestaOk", () => {
+      document.getElementById("voto-status").textContent = "Registramos tu voto!";
+    });
+
+    socket.on("disconnect", () => {
+      document.getElementById("main-message").textContent = "Conexión perdida. Intentando reconectar...";
+      document.getElementById("spinner").classList.remove('d-none');
+    });
+
+    // ---------------------------------------------
+    // --- INICIALIZACIÓN ---
+    // ---------------------------------------------
+    checkLocalStorage(); // Inicia la verificación del login y la conexión (si hay datos).
+
+    document.getElementById('modalIngreso').addEventListener('hidden.bs.modal', function () {
+      if (!userData.dni) {
+        const modal = new bootstrap.Modal(document.getElementById('modalIngreso'), {});
+        modal.show();
+      }
+    });
+  </script>
 </body>
+
 </html>

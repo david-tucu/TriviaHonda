@@ -1,0 +1,170 @@
+/* ---------- RESET Y BASES ---------- */
+body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background-color: #f8f9fa;
+    /* fondo claro */
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+/* ---------- BOTONES ---------- */
+.btn {
+    border-radius: 0 !important;
+    /* nada redondeado */
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.2s ease-in-out;
+    border-width: 2px;
+}
+
+.btn:hover,
+.btn:focus {
+    opacity: 0.85;
+    transform: translateY(-1px);
+}
+
+/* Primary button: magenta suave */
+.btn-primary {
+    background-color: #d63384;
+    /* magenta */
+    color: #fff;
+    border: 2px solid #d63384;
+}
+
+.btn-primary:hover {
+    background-color: #c12d75;
+    border-color: #c12d75;
+    color: #fff;
+}
+
+/* Secondary button: gris claro con borde */
+.btn-secondary {
+    background-color: #f1f3f5;
+    color: #333;
+    border: 2px solid #ced4da;
+}
+
+.btn-secondary:hover {
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+}
+
+/* Success button: verde suave */
+.btn-success {
+    background-color: #37b24d;
+    color: #fff;
+    border: 2px solid #37b24d;
+}
+
+.btn-success:hover {
+    background-color: #2f9e44;
+    border-color: #2f9e44;
+}
+
+/* Danger button: rojo suave */
+.btn-danger {
+    background-color: #f03e3e;
+    color: #fff;
+    border: 2px solid #f03e3e;
+}
+
+.btn-danger:hover {
+    background-color: #c92a2a;
+    border-color: #c92a2a;
+}
+
+/* ---------- FORMULARIOS ---------- */
+input,
+select,
+textarea {
+    border-radius: 0 !important;
+    border: 2px solid #ced4da;
+    padding: 0.5rem 0.75rem;
+    font-size: 1rem;
+    transition: border-color 0.2s ease-in-out;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: #d63384;
+    box-shadow: 0 0 0 0.2rem rgba(214, 51, 132, 0.25);
+}
+
+/* ---------- CARD ---------- */
+.card {
+    border-radius: 0 !important;
+    border: 1px solid #dee2e6;
+    background-color: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* ---------- TIPOGRAFÍA ---------- */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-weight: 600;
+    color: #212529;
+}
+
+p {
+    line-height: 1.5;
+}
+
+/* ---------- LINKS ---------- */
+a {
+    color: #d63384;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #c12d75;
+    text-decoration: underline;
+}
+
+/* ---------- SPINNER ---------- */
+.spinner {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(0, 0, 0, 0.1);
+    border-top-color: #d63384;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    vertical-align: middle;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+
+
+.container {
+    max-width: 600px;
+    margin-top: 10px;
+}
+
+.btn-action {
+    margin: 10px 5px;
+}
+
+#log-area {
+    height: 100px;
+    overflow-y: scroll;
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+#message-text {
+    min-height: 50px;
+}

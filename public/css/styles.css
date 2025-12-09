@@ -1,170 +1,151 @@
-/* ---------- RESET Y BASES ---------- */
+/* ----------------------------------------------------------- */
+/* ESTILOS GENERALES Y LAYOUT (Mobile First) */
+/* ----------------------------------------------------------- */
+
+/* Variables de color para un manejo más fácil */
+:root {
+    --honda-magenta: #b41349;
+    --honda-red: #c11325; 
+    --honda-gray-bg: #f0f0f0; 
+}
+.text-primary  {
+    color: #864b51 !important;
+}
+
 body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    background-color: #f8f9fa;
-    /* fondo claro */
-    color: #333;
-    margin: 0;
-    padding: 0;
+    /* CAMBIO CLAVE: Usar Roboto */
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--honda-gray-bg);
+    padding-top: 56px;
 }
 
-/* ---------- BOTONES ---------- */
-.btn {
-    border-radius: 0 !important;
-    /* nada redondeado */
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    transition: all 0.2s ease-in-out;
-    border-width: 2px;
+
+/* El contenedor principal debe usar todo el ancho disponible en móvil */
+.container {
+    max-width: 100%; /* Usar todo el ancho disponible */
+    padding: 0 10px; /* Reducir padding horizontal */
 }
 
-.btn:hover,
-.btn:focus {
-    opacity: 0.85;
-    transform: translateY(-1px);
+/* ----------------------------------------------------------- */
+/* CABECERA (Header) */
+/* ----------------------------------------------------------- */
+
+.header-honda {
+    background-color: var(--honda-magenta); /* Magenta de acento (para la marca) */
+    color: white;
+    padding: 10px 0;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Primary button: magenta suave */
+
+/* ----------------------------------------------------------- */
+/* ÁREA DE ESTADO Y MENSAJES */
+/* ----------------------------------------------------------- */
+
+#main-message {
+    font-size: 1.5rem;
+    padding: 20px 0;
+    color: #495057;
+}
+
+
+/* ----------------------------------------------------------- */
+/* PREGUNTA Y BOTONES DE OPCIÓN */
+/* ----------------------------------------------------------- */
+
+#pregunta-texto {
+    /* Hacer el texto de la pregunta más grande para móvil */
+    font-size: 1.7rem;
+    line-height: 1.1em; 
+    font-weight: bold;
+    margin-bottom: 25px; 
+    text-align: center;
+
+}
+
+.btn-opcion {
+    /* Aumentar el tamaño del padding para hacerlo más táctil */
+    display: block;
+    width: 100%;
+    padding: 20px 15px; /* Más padding vertical */
+    margin: 12px 0;
+    font-size: 1.3rem; /* Letra más grande */
+    border-radius: 6px; /* Bordes ligeramente suaves para mobile */
+    transition: transform 0.2s, background-color 0.2s;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Sombra sutil */
+}
+
+.btn-opcion:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
+}
+
+/* Estilo para botón seleccionado/desactivado */
+.btn-opcion:disabled {
+    background-color: #e1e1e1 !important;
+    border-color: #6c757d !important;
+    color: #6e6e6e;
+    opacity: 0.8;
+    cursor: not-allowed;
+}
+.btn-opcion.btn-secondary:disabled {
+    background-color: #f9f9f9 !important;
+    border-color: #6c757d !important;
+    color: #181818;
+    opacity: 0.8;
+    cursor: not-allowed;
+}
+
+/* ----------------------------------------------------------- */
+/* MODAL (Ingreso DNI/Nombre) */
+/* ----------------------------------------------------------- */
+
+#modalIngreso .modal-title {
+    font-size: 1.5rem;
+}
+
+/* ----------------------------------------------------------- */
+/* SOBRESCRITURA DE BOTONES DE BOOTSTRAP */
+/* ----------------------------------------------------------- */
+
+/* Botón Primary (Usado para 'Comenzar' en el modal) */
 .btn-primary {
-    background-color: #d63384;
-    /* magenta */
-    color: #fff;
-    border: 2px solid #d63384;
+    background-color: var(--honda-red); /* Fondo Rojo */
+    border-color: var(--honda-red);
+    color: white; /* Texto Blanco */
 }
 
 .btn-primary:hover {
-    background-color: #c12d75;
-    border-color: #c12d75;
-    color: #fff;
+    /* Oscurecer un poco el rojo al pasar el ratón */
+    background-color: #C62828; 
+    border-color: #C62828;
+    color: white;
 }
 
-/* Secondary button: gris claro con borde */
-.btn-secondary {
-    background-color: #f1f3f5;
-    color: #333;
-    border: 2px solid #ced4da;
+.btn-primary:active {
+    background-color: #B71C1C !important;
+    border-color: #B71C1C !important;
 }
 
-.btn-secondary:hover {
-    background-color: #e9ecef;
-    border-color: #adb5bd;
+/* Mejorar el estilo visual de los botones de Bootstrap en general */
+.btn {
+    border-radius: 6px !important; /* Aplicar el mismo radio suave */
+    font-weight: bold;
 }
 
-/* Success button: verde suave */
-.btn-success {
-    background-color: #37b24d;
-    color: #fff;
-    border: 2px solid #37b24d;
+/* Añadir animación para mostrar pregunta */
+.animate-in {
+    animation: fadeIn 0.5s ease-out;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-.btn-success:hover {
-    background-color: #2f9e44;
-    border-color: #2f9e44;
-}
-
-/* Danger button: rojo suave */
-.btn-danger {
-    background-color: #f03e3e;
-    color: #fff;
-    border: 2px solid #f03e3e;
-}
-
-.btn-danger:hover {
-    background-color: #c92a2a;
-    border-color: #c92a2a;
-}
-
-/* ---------- FORMULARIOS ---------- */
-input,
-select,
-textarea {
-    border-radius: 0 !important;
-    border: 2px solid #ced4da;
-    padding: 0.5rem 0.75rem;
-    font-size: 1rem;
-    transition: border-color 0.2s ease-in-out;
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-    outline: none;
-    border-color: #d63384;
-    box-shadow: 0 0 0 0.2rem rgba(214, 51, 132, 0.25);
-}
-
-/* ---------- CARD ---------- */
-.card {
-    border-radius: 0 !important;
-    border: 1px solid #dee2e6;
-    background-color: #fff;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-/* ---------- TIPOGRAFÍA ---------- */
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-    font-weight: 600;
-    color: #212529;
-}
-
-p {
-    line-height: 1.5;
-}
-
-/* ---------- LINKS ---------- */
-a {
-    color: #d63384;
-    text-decoration: none;
-}
-
-a:hover {
-    color: #c12d75;
-    text-decoration: underline;
-}
-
-/* ---------- SPINNER ---------- */
-.spinner {
-    display: inline-block;
-    width: 24px;
-    height: 24px;
-    border: 3px solid rgba(0, 0, 0, 0.1);
-    border-top-color: #d63384;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    vertical-align: middle;
-}
-
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-
-
-.container {
-    max-width: 600px;
-    margin-top: 10px;
-}
-
-.btn-action {
-    margin: 10px 5px;
-}
-
-#log-area {
-    height: 100px;
-    overflow-y: scroll;
-    background-color: #f8f9fa;
-    padding: 10px;
-    border-radius: 5px;
-}
-
-#message-text {
-    min-height: 50px;
+#inputNombre {
+    text-transform: uppercase;
 }
