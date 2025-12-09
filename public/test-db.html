@@ -8,6 +8,7 @@ body { font-family: Arial; padding: 20px; }
 #resultado { margin-top: 20px; }
 table { border-collapse: collapse; margin-top: 20px; }
 th, td { border: 1px solid #ccc; padding: 8px; }
+button { margin-right: 10px; }
 </style>
 </head>
 <body>
@@ -15,49 +16,70 @@ th, td { border: 1px solid #ccc; padding: 8px; }
 <h1>Test de Conexión a Base de Datos</h1>
 
 <button id="btn">Probar conexión</button>
+<button id="btn200">Listar últimas 200 participaciones</button>
 
 <div id="resultado">Esperando acción…</div>
 
 <script>
+function renderTable(data) {
+    if (data.length === 0) {
+        document.getElementById("resultado").innerHTML = "No hay registros.";
+        return;
+    }
+
+    let html = "<table><tr>";
+
+    const cols = Object.keys(data[0]);
+    cols.forEach(c => html += `<th>${c}</th>`);
+    html += "</tr>";
+
+    data.forEach(row => {
+        html += "<tr>";
+        cols.forEach(c => html += `<td>${row[c]}</td>`);
+        html += "</tr>";
+    });
+
+    html += "</table>";
+    document.getElementById("resultado").innerHTML = html;
+}
+
+
+// 🔹 Botón: Probar conexión
 document.getElementById("btn").onclick = () => {
     document.getElementById("resultado").innerHTML = "Consultando…";
 
     fetch("/test-db")
-      .then(r => r.json())
-      .then(data => {
-        if (!data.ok) {
-          document.getElementById("resultado").innerHTML =
-            "<b>Error:</b> " + data.error;
-          return;
-        }
-
-        if (data.data.length === 0) {
-          document.getElementById("resultado").innerHTML = "No hay usuarios.";
-          return;
-        }
-
-        let html = "<table><tr>";
-
-        // Encabezados dinámicos
-        const cols = Object.keys(data.data[0]);
-        cols.forEach(c => html += `<th>${c}</th>`);
-        html += "</tr>";
-
-        // Filas
-        data.data.forEach(row => {
-          html += "<tr>";
-          cols.forEach(c => html += `<td>${row[c]}</td>`);
-          html += "</tr>";
+        .then(r => r.json())
+        .then(result => {
+            if (!result.ok) {
+                document.getElementById("resultado").innerHTML = "Error: " + result.error;
+                return;
+            }
+            renderTable(result.data);
+        })
+        .catch(err => {
+            document.getElementById("resultado").textContent = "Error de conexión: " + err;
         });
+};
 
-        html += "</table>";
 
-        document.getElementById("resultado").innerHTML = html;
-      })
-      .catch(err => {
-        document.getElementById("resultado").textContent =
-          "Error de conexión: " + err;
-      });
+// 🔹 Botón: Últimas 200 participaciones
+document.getElementById("btn200").onclick = () => {
+    document.getElementById("resultado").innerHTML = "Consultando últimas 200…";
+
+    fetch("/test-db-200")
+        .then(r => r.json())
+        .then(result => {
+            if (!result.ok) {
+                document.getElementById("resultado").innerHTML = "Error: " + result.error;
+                return;
+            }
+            renderTable(result.data);
+        })
+        .catch(err => {
+            document.getElementById("resultado").textContent =
+                "Error de conexión: " + err;
+        });
 };
 </script>
 
