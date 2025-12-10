@@ -20,13 +20,17 @@
         #resultado {
             margin-top: 20px;
         }
+        /* todas las celdas centradas */
+        td, th {
+            text-align: center;
+        }
     </style>
 </head>
 
 <body>
     <div class="container-fluid">
 
-        <h1 class="mb-4">Pruebas de consultas</h1>
+        <h1 class="mb-4">Pruebas de conexión</h1>
 
         <div class="d-grid gap-2 d-sm-flex justify-content-sm-start mb-4">
             <button id="btn" class="btn btn-primary">Usuarios</button>
@@ -69,6 +73,14 @@
             html += "</tr></thead><tbody>"; // Usar thead y tbody es buena práctica
 
             data.forEach(row => {
+                //si el dato es true/false muestra "√" o "·"
+                Object.keys(row).forEach(key => {
+                    if (row[key] === true || row[key] === false) {
+                        row[key] = row[key] ? "√" : "·";
+                    }
+                });
+
+
                 html += "<tr>";
                 cols.forEach(c => html += `<td>${row[c]}</td>`);
                 html += "</tr>";
