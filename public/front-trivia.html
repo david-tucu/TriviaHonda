@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mobile Trivia Honda</title>
+  <title>TRIVIA HONDA</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,9 +17,8 @@
 </head>
 
 <body>
-  <header class="header-honda text-center">
-    <h1 class="h4 m-0">TRIVIA HONDA</h1>
-
+  <header class="header-honda text-center pt-4">
+    <div class="contenedor-img-header"><img src="img/logo-honda.png" class="img-logo" alt=""></div>
     <div class="d-flex justify-content-between align-items-center px-2">
       <p class="m-0 small text-start" id="user-info"></p>
       <button id="btnLogout" onclick="cerrarSesion()" class="btn btn-sm btn-outline-light" style="display:none;">
@@ -31,10 +30,14 @@
   <div class="container">
     <div id="status-area" class="text-center mt-4">
       <h2 id="main-message">Esperando conexión...</h2>
-      <div id="spinner" class="spinner-border text-primary d-none" role="status"></div>
+      <div id="spinner" class="spinner-modern d-none" role="status">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
     </div>
 
-    <div id="pregunta-area" class="card p-4 mt-0 animate-in" style="display:none;">
+    <div id="pregunta-area" class="card p-4 mt-0 animate-in text-center" style="display:none;">
       <p id="pregunta-texto"></p>
       <div id="opciones-container">
       </div>
@@ -43,15 +46,17 @@
 
   </div>
 
+  <div class="footer"></div>
+
   <div class="modal fade" id="modalIngreso" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false"
     aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">¡Hola!</h5>
+          <h5 class="modal-title"><strong>¡Hola!</strong></h5>
         </div>
         <div class="modal-body">
-          <p class="mb-3">Estás por conectarte a la <strong>Trivia Honda.</strong> Ingresá tus datos que registremos tu
+          <p class="mb-3">Estás por conectarte a la <strong>TRIVIA HONDA.</strong> Ingresá tus datos que registremos tu
             participación y lugar en el ranking.</p>
 
           <div class="form-floating mb-3">
@@ -71,7 +76,7 @@
 
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-primary w-100" onclick="guardarDatos()">COMENZAR</button>
+          <button type="button" class="btn btn-primary w-100" onclick="guardarDatos()">EMPEZAR</button>
         </div>
       </div>
     </div>
@@ -83,7 +88,7 @@
   <script src="js/main-front.js"></script>
 
   <script>
-   
+
   </script>
 </body>
 

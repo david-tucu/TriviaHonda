@@ -4,11 +4,17 @@ const http = require('http');
 const cors = require('cors');
 const path = require('path');
 
+
+
 // Socket.IO
 const { Server } = require('socket.io');
 
-// 🔑 CARGAR PREGUNTAS (Asegúrate de que este archivo exista y use module.exports)
-const ALL_QUESTIONS = require('./questions'); 
+// CARGAR PREGUNTAS (Asegúrate de que este archivo exista y use module.exports)
+const ALL_QUESTIONS = require('./questions');
+
+//PAR CALCULAR EL PUNTAJE DE CADA PREGUNTA:
+const TIEMPO_MAXIMO_MS = 20000; // 20 segundos en milisegundos
+
 
 const app = express();
 app.use(cors());
@@ -28,8 +34,8 @@ const io = new Server(server, {
 
 /** Obtiene una pregunta por su ID. */
 const getPreguntaPorId = (id) => {
-    // Busca por ID, asegurando la comparación con el mismo tipo (parseInt)
-    return ALL_QUESTIONS.find(q => q.id === parseInt(id)); 
+  // Busca por ID, asegurando la comparación con el mismo tipo (parseInt)
+  return ALL_QUESTIONS.find(q => q.id === parseInt(id));
 };
 
 /**
@@ -38,42 +44,43 @@ const getPreguntaPorId = (id) => {
  * @returns {object} La pregunta sin la propiedad 'correcta'.
  */
 const getPreguntaSinRespuesta = (pregunta) => {
-    if (!pregunta) return null;
-    // Usamos destructuring para extraer 'correcta' y capturar el resto en 'preguntaLimpia'
-    const { correcta, ...preguntaLimpia } = pregunta; 
-    return preguntaLimpia;
+  if (!pregunta) return null;
+  // Usamos destructuring para extraer 'correcta' y capturar el resto en 'preguntaLimpia'
+  const { correcta, ...preguntaLimpia } = pregunta;
+  return preguntaLimpia;
 };
 
 /** Verifica si la respuesta elegida es la correcta. */
 const esRespuestaCorrecta = (id, respuesta) => {
-    const pregunta = getPreguntaPorId(id);
-    return pregunta && pregunta.correcta === respuesta;
+  const pregunta = getPreguntaPorId(id);
+  return pregunta && pregunta.correcta === respuesta;
 };
 
 
 // --- Redis Adapter solo en producción ---
 if (process.env.NODE_ENV === 'production' && process.env.REDIS_URL) {
-    const { createClient } = require('redis');
-    const { createAdapter } = require('@socket.io/redis-adapter');
+  const { createClient } = require('redis');
+  const { createAdapter } = require('@socket.io/redis-adapter');
 
-    const pubClient = createClient({ url: process.env.REDIS_URL });
-    const subClient = pubClient.duplicate();
+  const pubClient = createClient({ url: process.env.REDIS_URL });
+  const subClient = pubClient.duplicate();
 
-    Promise.all([pubClient.connect(), subClient.connect()])
-        .then(() => {
-            io.adapter(createAdapter(pubClient, subClient));
-            console.log('Redis Adapter conectado: escalado habilitado.');
-        })
-        .catch(err => {
-            console.error('ERROR Redis:', err.message);
-        });
+  Promise.all([pubClient.connect(), subClient.connect()])
+    .then(() => {
+      io.adapter(createAdapter(pubClient, subClient));
+      console.log('Redis Adapter conectado: escalado habilitado.');
+    })
+    .catch(err => {
+      console.error('ERROR Redis:', err.message);
+    });
 } else {
-    console.log("Modo desarrollo: Redis deshabilitado, Socket.IO en instancia única.");
+  console.log("Modo desarrollo: Redis deshabilitado, Socket.IO en instancia única.");
 }
 
 // --- Variables de estado ---
 let preguntaActivaId = null; // ID de la pregunta activa
 let respuestas = []; // memoria temporal de respuestas
+let tiempoInicioPregunta = null; // para calcular la diferencia al guardar
 
 // --- Lógica Socket.IO ---
 io.on('connection', socket => {
@@ -94,103 +101,167 @@ io.on('connection', socket => {
     let broadcastEvent = '';
     let broadcastPayload = {};
 
-    switch(action) {
-        case 'mostrarPregunta':
-            preguntaActivaId = payload; // payload debe ser el ID de la pregunta (e.g., 1)
-            const pregunta = getPreguntaPorId(preguntaActivaId);
+    switch (action) {
+      case 'mostrarPregunta':
+        preguntaActivaId = payload; // payload debe ser el ID de la pregunta (e.g., 1)
+        const pregunta = getPreguntaPorId(preguntaActivaId);
 
-            if (pregunta) {
-                broadcastEvent = 'preguntaActiva';
-                // ENVIAR LA PREGUNTA COMPLETA (PERO LIMPIA)
-                broadcastPayload = getPreguntaSinRespuesta(pregunta); 
-            } else {
-                console.error(`Error: Pregunta con ID ${preguntaActivaId} no encontrada.`);
-                socket.emit('error', { msg: 'Pregunta no encontrada.' });
-                return; // Salir sin emitir
-            }
-            break;
+        if (pregunta) {
+          //Guardar el tiempo exacto en que la pregunta se activa para todos
+          tiempoInicioPregunta = Date.now(); // ASIGNACIÓN DEL TIEMPO DE INICIO
 
-        case 'destacarRespuesta':
-            // Esta acción usa la pregunta activa actual para obtener la respuesta correcta
-            const pregActual = getPreguntaPorId(preguntaActivaId); 
-            
-            broadcastEvent = 'estadoJuego';
-            broadcastPayload = { 
-                status: 'respuestaMostrada', 
-                respuestaCorrecta: pregActual ? pregActual.correcta : null 
-            };
-            break;
+          //log tiempo de inicio en consola
+          console.log(`Pregunta ID ${preguntaActivaId} activada a las ${new Date(tiempoInicioPregunta).toISOString()}`);
 
-        case 'irAInicio':
-            preguntaActivaId = null; // Limpiar la pregunta activa
-            broadcastEvent = 'estadoJuego';
-            broadcastPayload = { status: 'inicio' };
-            break;
-            
-        case 'pantallaRanking':
-            broadcastEvent = 'pantallaPrincipal';
-            broadcastPayload = { view: 'ranking' };
-            break;
-            
-        case 'mostrarRanking':
-            broadcastEvent = 'estadoJuego';
-            broadcastPayload = { status: 'ganadoresMostrados' };
-            break;
-            
-        case 'limpiarRespuestas':
-            respuestas = [];
-            console.log('Respuestas limpiadas.');
-            break;
-            
-        default: break;
+
+          broadcastEvent = 'preguntaActiva';
+          // ENVIAR LA PREGUNTA COMPLETA (PERO LIMPIA)
+
+
+          broadcastPayload = getPreguntaSinRespuesta(pregunta);
+        } else {
+          console.error(`Error: Pregunta con ID ${preguntaActivaId} no encontrada.`);
+          socket.emit('error', { msg: 'Pregunta no encontrada.' });
+          return; // Salir sin emitir
+        }
+        break;
+
+      case 'destacarRespuesta':
+        // Esta acción usa la pregunta activa actual para obtener la respuesta correcta
+        const pregActual = getPreguntaPorId(preguntaActivaId);
+
+        broadcastEvent = 'estadoJuego';
+        broadcastPayload = {
+          status: 'respuestaMostrada',
+          respuestaCorrecta: pregActual ? pregActual.correcta : null
+        };
+        break;
+
+      case 'irAInicio':
+        preguntaActivaId = null; // Limpiar la pregunta activa
+        broadcastEvent = 'estadoJuego';
+        broadcastPayload = { status: 'inicio' };
+        break;
+
+      case 'pantallaRanking':
+        broadcastEvent = 'pantallaPrincipal';
+        broadcastPayload = { view: 'ranking' };
+        break;
+
+      case 'mostrarRanking':
+        broadcastEvent = 'estadoJuego';
+        broadcastPayload = { status: 'ganadoresMostrados' };
+        break;
+
+      case 'limpiarRespuestas':
+        respuestas = [];
+        console.log('Respuestas limpiadas.');
+        break;
+
+      default: break;
     }
 
     if (broadcastEvent) {
-        io.emit(broadcastEvent, broadcastPayload);
-        
-        // 🔑 AGREGAR LA SEÑAL DE "A RESPONDER" JUSTO DESPUÉS DE ENVIAR LA PREGUNTA
-        if (action === 'mostrarPregunta') {
-             io.emit('estadoJuego', { status: 'aResponder' });
-        }
+      io.emit(broadcastEvent, broadcastPayload);
+
+      // 🔑 AGREGAR LA SEÑAL DE "A RESPONDER" JUSTO DESPUÉS DE ENVIAR LA PREGUNTA
+      if (action === 'mostrarPregunta') {
+        io.emit('estadoJuego', { status: 'aResponder' });
+      }
     }
 
     socket.emit('actionConfirmed', { action, success: !!broadcastEvent, event: broadcastEvent });
   });
 
-  socket.on('respuesta', data => {
+  // Asegúrate de que tu 'pool' de PostgreSQL esté importado correctamente
+
+  socket.on('respuesta', async (data) => {
     const { dni, id_pregunta, respuesta, nombre } = data;
 
-    if (preguntaActivaId === null || id_pregunta !== preguntaActivaId) {
-        socket.emit('error', { msg: 'No hay pregunta activa o ID incorrecto.' });
-        return;
+    // VALIDACIÓN CRUCIAL: Asegurarse de que el tiempo de inicio existe
+    if (tiempoInicioPregunta === null) {
+      socket.emit('error', { msg: 'La pregunta aún no ha comenzado o ya finalizó.' });
+      return;
     }
 
-    // 1. VALIDAR SI EL DNI YA VOTÓ ESTA PREGUNTA
-    const yaVoto = respuestas.some(r => 
-        r.dni === dni && r.id_pregunta === id_pregunta
+    // CALCULO DE LA LATENCIA: Tiempo actual - Tiempo de inicio de la pregunta
+    const latencia = Date.now() - tiempoInicioPregunta;
+
+    if (preguntaActivaId === null || id_pregunta !== preguntaActivaId) {
+      socket.emit('error', { msg: 'No hay pregunta activa o ID incorrecto.' });
+      return;
+    }
+
+    // 1. VALIDAR SI EL DNI YA VOTÓ ESTA PREGUNTA (en memoria temporal o DB)
+    // Para simplificar, asumimos que la validación en memoria (respuestas = []) sigue siendo válida
+    // para la pregunta activa. Si usas escalabilidad (Redis), DEBES validar contra la DB.
+
+    /* TODO: verifica si conviene validar o no si ya votó en memoria
+    const yaVotoEnDB = await pool.query(
+      'SELECT id FROM respuestas WHERE dni_jugador = $1 AND id_pregunta = $2',
+      [dni, id_pregunta]
     );
 
-    if (yaVoto) {
-        socket.emit('error', { msg: 'DNI ya votó esta pregunta' });
-        return;
+    if (yaVotoEnDB.rows.length > 0) {
+      socket.emit('error', { msg: 'DNI ya votó esta pregunta' });
+      return;
+    }
+    */
+
+    // 2. DETERMINAR SI LA RESPUESTA ES CORRECTA (Lógica que ya tienes)
+    const esCorrecta = esRespuestaCorrecta(id_pregunta, respuesta);
+    const puntajeObtenido = esCorrecta ? 1 : 0; // Asumimos 1 punto por respuesta correcta
+
+    // 3. REGISTRAR O ACTUALIZAR USUARIO (upsert)
+    try {
+      // 🔑 Solo INSERTAR o ACTUALIZAR el NOMBRE, ignorando el puntaje_total en el conflicto.
+      await pool.query(
+        `INSERT INTO usuarios (dni, nombre, puntaje_total)
+         VALUES ($1, $2, 0) -- Insertamos con puntaje inicial 0
+         ON CONFLICT (dni) DO UPDATE
+         SET nombre = EXCLUDED.nombre;`, // Solo actualizamos el nombre
+        [dni, nombre]
+      );
+    } catch (err) {
+      console.error('Error al asegurar el registro de usuario:', err);
     }
 
-    // 2. DETERMINAR SI LA RESPUESTA ES CORRECTA
-    const esCorrecta = esRespuestaCorrecta(id_pregunta, respuesta);
+    // 4. GUARDAR RESPUESTA EN LA BASE DE DATOS
+    // 4. GUARDAR RESPUESTA EN LA BASE DE DATOS (UPSERT)
+    try {
+      // 🔑 Consulta con ON CONFLICT DO UPDATE
+      await pool.query(
+        `INSERT INTO respuestas (dni_jugador, id_pregunta, respuesta_elegida, es_correcta, tiempo_respuesta)
+         VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT (dni_jugador, id_pregunta) DO UPDATE
+         SET 
+             respuesta_elegida = EXCLUDED.respuesta_elegida,
+             es_correcta = EXCLUDED.es_correcta,
+             tiempo_respuesta = EXCLUDED.tiempo_respuesta;`,
+        [dni, id_pregunta, respuesta, esCorrecta, latencia]
+      );
 
-    // 3. GUARDAR RESPUESTA
-    respuestas.push({ 
-        dni, 
-        nombre,
-        id_pregunta, 
-        respuesta_elegida: respuesta, 
-        es_correcta: esCorrecta,
-        tiempo_respuesta: Date.now(),
+      console.log(`Respuesta registrada/actualizada para ${dni} en la DB.`);
+
+      // 5. RESPUESTA AL CLIENTE
+      socket.emit('respuestaOk');
+
+    } catch (err) {
+      // Ya no debería haber errores 23505 (duplicado), solo errores graves
+      console.error('Error al guardar/actualizar respuesta en DB:', err);
+      socket.emit('error', { msg: 'Error interno al guardar la respuesta.' });
+    }
+
+    // 6. GUARDAR EN MEMORIA (Opcional: solo si mantienes la variable 'respuestas = []' temporal)
+    respuestas.push({
+      dni,
+      nombre,
+      id_pregunta,
+      respuesta_elegida: respuesta,
+      es_correcta: esCorrecta,
+      tiempo_respuesta: latencia,
     });
-    
-    console.log(`Voto registrado: DNI ${dni}, Pregunta ${id_pregunta}, Respuesta ${respuesta}, Correcta: ${esCorrecta}`);
 
-    socket.emit('respuestaOk');
   });
 
   socket.on('disconnect', () => {
@@ -217,8 +288,7 @@ app.get('/admin/preguntas', (req, res) => res.json(ALL_QUESTIONS));
 
 
 // --- Test DB (PostgreSQL) ---
-// ⚠️ Asegúrate de que el archivo './db' exista y exporte el pool de conexión
-const pool = require('./db'); 
+const pool = require('./db');
 app.get('/test-db', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM usuarios ORDER BY id DESC LIMIT 200');
@@ -242,6 +312,102 @@ app.get('/test-db-200', async (req, res) => {
   }
 });
 
+// --- ENDPOINT: Ranking General con Cálculo de Velocidad ---
+app.get('/ver-rank', async (req, res) => {
+  try {
+    // 🔑 USAMOS la función getRanking y le pasamos el objeto 'pool'
+    const rankingData = await getRanking(pool, 17); // 100 es un ejemplo de límite
+    
+    res.json({ 
+      ok: true, 
+      data: rankingData 
+    });
+
+  } catch (err) {
+    console.error("Error en /ver-rank:", err);
+    res.status(500).json({ 
+      ok: false, 
+      error: 'Error interno del servidor al calcular el ranking.' 
+    });
+  }
+});
+
+
+// Asegúrate de que esta función está disponible en tu server.js o archivo de rutas
+async function getRanking(pool, limit_ = 17) {
+  
+  const limitValue = parseInt(limit_, 10) || 17;
+
+  try {
+    const rankingResult = await pool.query(`
+            WITH ultima_respuesta AS (
+                SELECT
+                    dni_jugador,
+                    id_pregunta,
+                    es_correcta,
+                    tiempo_respuesta,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY dni_jugador, id_pregunta
+                        ORDER BY id DESC
+                    ) as rn
+                FROM 
+                    respuestas
+            ),
+            respuestas_validas AS (
+                SELECT
+                    dni_jugador,
+                    es_correcta,
+                    tiempo_respuesta
+                FROM
+                    ultima_respuesta
+                WHERE
+                    rn = 1
+            ),
+            -- 1. CTE para calcular el puntaje y filtrar (Solo usuarios con puntaje > 0)
+            puntaje_calculado AS (
+                SELECT
+                    u.dni,
+                    u.nombre,
+                    COALESCE(SUM(
+                        CASE 
+                            WHEN r.es_correcta = TRUE THEN 
+                                (2000) + 
+                                TRUNC((CAST(${TIEMPO_MAXIMO_MS} AS NUMERIC) - r.tiempo_respuesta) / 40.0) 
+                            ELSE 
+                                0 
+                        END
+                    ), 0)::BIGINT AS puntaje_final
+                FROM 
+                    usuarios u
+                LEFT JOIN 
+                    respuestas_validas r ON u.dni = r.dni_jugador
+                GROUP BY 
+                    u.dni, u.nombre
+                HAVING 
+                    COALESCE(SUM(
+                        CASE WHEN r.es_correcta = TRUE THEN 1 ELSE 0 END
+                    ), 0) > 0 --  FILTRO CLAVE: Solo si tienen al menos 1 respuesta correcta
+            )
+            -- 2. SELECT final para aplicar la posición (RANK)
+            SELECT
+                RANK() OVER (ORDER BY puntaje_final DESC) AS posicion,
+                dni,
+                nombre,
+                puntaje_final
+            FROM
+                puntaje_calculado
+            ORDER BY 
+                puntaje_final DESC
+            LIMIT $1;
+        `, [limitValue]); 
+
+    return rankingResult.rows;
+
+  } catch (err) {
+    console.error('Error al generar el ranking con cálculo de velocidad:', err);
+    throw new Error('No se pudo generar el ranking.'); 
+  }
+}
 
 // --- Archivos estáticos ---
 app.use(express.static('public'));

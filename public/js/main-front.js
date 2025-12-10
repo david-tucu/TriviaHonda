@@ -26,13 +26,15 @@ function checkLocalStorage() {
         // Si hay datos, nos conectamos. El mensaje de estado lo maneja el on('connect')
         socket.connect();
     } else {
+
         btnLogout.style.display = 'none';
 
-        document.getElementById("main-message").textContent = "Ingresá tus datos para participar.";
-        document.getElementById("spinner").classList.add('d-none'); // Asegurarse que esté oculto
+        //document.getElementById("main-message").textContent = "Ingresá tus datos para participar.";
+        //document.getElementById("spinner").classList.add('d-none'); // Asegurarse que esté oculto
 
         const modal = new bootstrap.Modal(document.getElementById('modalIngreso'), {});
         modal.show();
+
     }
 }
 
@@ -115,8 +117,8 @@ function guardarDatos() {
     modal.hide();
 
     // Si la conexión se inició, forzar la UI de espera
-    document.getElementById("main-message").textContent = "Esperando próxima pregunta...";
-    document.getElementById("spinner").classList.remove('d-none');
+    //document.getElementById("main-message").textContent = "Esperando próxima pregunta...";
+    //document.getElementById("spinner").classList.remove('d-none');
 
 
     socket.connect();
@@ -229,20 +231,47 @@ function enviarRespuesta(opcion, btnSeleccionado) {
 
 // --- HANDLERS DE SOCKET.IO ---
 
+socket.on("connect", () => {
+    console.log("Conectado al backend. DNI:", userData.dni);
+    
+    // Si ya estamos logueados (DNI existe), establecemos la UI de espera.
+    // Esto corrige que se quede en "Esperando conexión..." si el DNI estaba guardado.
+    if (userData.dni) {
+        document.getElementById("main-message").textContent = "Esperando próxima pregunta...";
+        document.getElementById("spinner").classList.remove('d-none');
+    }
+});
+
+socket.on("preguntaActiva", (data) => {
+    // Al recibir la pregunta, renderizamos el HTML para que el usuario pueda votar.
+    renderQuestion(data);
+});
+
 socket.on("estadoJuego", (data) => {
-    if (data.status === 'inicio' || data.status === 'ganadoresMostrados') {
-        let message = (data.status === 'inicio') ?
+    // Maneja todos los cambios de estado del juego (inicio, fin de tiempo, ranking, etc.)
+    const status = data.status;
+
+    if (status === 'inicio' || status === 'ganadoresMostrados') {
+        let message = (status === 'inicio') ?
             "Esperando indicaciones del moderador." :
             "";
+        // Vuelve a la pantalla de espera
         volverAportada(message);
-    } else if (data.status === 'respuestaMostrada') {
+    } else if (status === 'respuestaMostrada') {
         document.getElementById("voto-status").textContent = "¡Tiempo terminado! Revisando resultados...";
-    } else if (data.status === 'aResponder') { // ⬅️ ¡NUEVO!
+    } else if (status === 'aResponder') { 
+        // 🔑 NUEVO: Indica al usuario que la votación está activa.
         document.getElementById("main-message").textContent = "¡A Responder!";
     }
 });
 
+socket.on("respuestaOk", () => {
+    // Se confirma que el voto fue registrado en el servidor.
+    document.getElementById("voto-status").textContent = "Registramos tu voto!";
+});
+
 socket.on("error", (data) => {
+    // Maneja errores específicos del servidor, como votar dos veces.
     if (data.msg === 'DNI ya votó esta pregunta') {
         yaVoto = true;
         disableOptions(null);
@@ -253,29 +282,13 @@ socket.on("error", (data) => {
     }
 });
 
-socket.on("preguntaActiva", (data) => {
-    renderQuestion(data);
-});
-
-socket.on("estadoJuego", (data) => {
-    if (data.status === 'inicio' || data.status === 'ganadoresMostrados') {
-        let message = (data.status === 'inicio') ?
-            "Esperando indicaciones del moderador." :
-            "";
-        volverAportada(message);
-    } else if (data.status === 'respuestaMostrada') {
-        document.getElementById("voto-status").textContent = "¡Tiempo terminado! Revisando resultados...";
-    }
-});
-
-socket.on("respuestaOk", () => {
-    document.getElementById("voto-status").textContent = "Registramos tu voto!";
-});
-
 socket.on("disconnect", () => {
+    // Se dispara cuando se pierde la conexión con el servidor.
     document.getElementById("main-message").textContent = "Conexión perdida. Intentando reconectar...";
     document.getElementById("spinner").classList.remove('d-none');
 });
+
+
 
 // ---------------------------------------------
 // --- INICIALIZACIÓN ---
