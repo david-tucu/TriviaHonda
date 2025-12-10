@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trivia | Pantalla Principal</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-bg: #a80417;
+            /* Fondo oscuro */
+            --primary-color: #ffffff;
+            /* Texto blanco */
+            --secondary-color: #edd034;
+            /* Color de destaque (oro) */
+            --correct-color: #edd034;
+            /* destaque para la respuesta correcta */
+        }
+
+        body,
+        html {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            /* CLAVE: Evita barras de desplazamiento */
+            font-family: 'Roboto', sans-serif;
+            font-weight: 700;
+            background-color: var(--primary-bg);
+            color: var(--primary-color);
+        }
+
+        .display-2,
+        h1,
+        h2,
+        h3 {
+            font-weight: bold;
+            font-weight: 700;
+        }
+
+
+        .view-container {
+            position: relative;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .view {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+
+            /* Transiciones: Slide/Zoom */
+            transition:
+                opacity 0.6s ease-in-out,
+                transform 0.6s ease-in-out;
+
+            opacity: 0;
+            /* Por defecto, oculto */
+            transform: scale(0.95);
+            /* Ligeramente encogido */
+            pointer-events: none;
+            /* No interactuable cuando está oculto */
+            box-sizing: border-box;
+        }
+
+        .view.active {
+            opacity: 1;
+            transform: scale(1);
+            /* Escala normal (Zoom-in) */
+            pointer-events: auto;
+            z-index: 10;
+        }
+
+        /* --- ESTILOS DE VISTAS ESPECÍFICAS --- */
+
+        /* 1. Portada */
+        #portada h1 {
+            font-size: 6rem;
+            font-weight: 700;
+        }
+
+        /* 2. Placa Pregunta (Estructura 60/40) */
+
+        /* Fila 1 (60% Alto): Contenedor de la Pregunta */
+        #placa-pregunta .row:first-child {
+            height: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 0 5rem;
+            box-sizing: border-box;
+        }
+
+        /* Estilo de la Pregunta (Auto-ajuste por ancho) */
+        #pregunta-texto {
+            font-size: 4vw;
+            /* Tamaño basado en el ancho de la vista */
+            margin-bottom: 2rem;
+            max-height: 100%;
+            /* Contenido en el 60% */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: bold;
+        }
+
+        /* CLAVE 1: Ajuste de la Fila de Opciones (40% de Alto) */
+        #opciones-row {
+            height: 50%;
+            width: 100%;
+            padding: 0 3rem 3rem 3rem;
+            box-sizing: border-box;
+            display: flex;
+            align-items: stretch;
+            /* Estira las columnas para que ocupen todo el 40% */
+        }
+
+        /* Contenedor Flex para las 4 opciones */
+        #opciones-container {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            /* Asegura que los col-3 se distribuyan uniformemente */
+            display: flex;
+            flex-wrap: wrap;
+            align-items: stretch;
+            /* Asegura que todas las filas tengan el mismo alto */
+            justify-content: center;
+        }
+
+        /* CLAVE 2: Estilo de las Cajas de Opción para Centrado Perfecto */
+        .opcion-box {
+            font-size: 2vw;
+            padding: 1.5rem 1rem;
+            margin: 0.5rem;
+            border-radius: 15px;
+            background-color: rgba(255, 255, 255, 0.1);
+
+            /* Ocupa el 100% del alto disponible en su columna */
+            height: calc(100% - 1rem);
+            width: 100%;
+
+            /* CENTRADO PERFECTO USANDO FLEXBOX */
+            display: flex;
+            justify-content: center;
+            /* Centrado horizontal */
+            align-items: center;
+            /* Centrado vertical */
+            text-align: center;
+            /* Asegura que el texto dentro esté centrado si hay varias líneas */
+
+            transition: background-color 0.3s, transform 0.3s;
+            font-weight: 300;
+        }
+
+        /* Estilo para Respuesta Correcta */
+        /* CAMBIO CLAVE: La clase 'correcta' se aplica al DIV padre 'opcion-col' */
+        .opcion-col.correcta .opcion-box {
+            background-color: var(--correct-color) !important;
+            font-weight: 700;
+        }
+
+        /* Aplicamos la animación al contenedor de la columna (.opcion-col) */
+        .opcion-col.correcta {
+            animation: pulse-correcta 1s infinite alternate;
+        }
+
+        /* Estilo para la opción seleccionada ('q') */
+        /* CLAVE: Ahora se aplica la clase 'seleccionada' al contenedor de la columna */
+        .opcion-col.seleccionada .opcion-box {
+            background-color: #160e02 !important;
+            /* Color de destaque (azul) */
+        }
+
+        /* Opcional: Animación para la seleccionada */
+        .opcion-col.seleccionada {
+            transform: scale(1.05);
+            z-index: 5;
+        }
+
+        @keyframes pulse-correcta {
+
+            /* Aplicamos el zoom al contenedor de la columna */
+            from {
+                transform: scale(1);
+            }
+
+            to {
+                transform: scale(1.03);
+            }
+        }
+
+
+        /* 3. Ranking */
+
+        #revela-ranking .display-2 {
+            font-size: 6vh;
+        }
+
+        #placa-ranking .lead,
+        #revela-ranking .lead {
+            font-size: 3vh;
+            text-transform: uppercase;
+        }
+
+        #ranking-list {
+            list-style: none;
+            padding: 0;
+            width: 80%;
+            max-width: 900px;
+        }
+
+        .rank-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 2.3vh;
+            /* Tamaño del ranking ajustado a la vista */
+            padding: 0 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: background-color 0.3s;
+        }
+
+        .rank-item:nth-child(1) {
+            font-size: 3.3vh;
+            color: var(--secondary-color);
+        }
+
+        .rank-item:nth-child(2) {
+            font-size: 2.8vh;
+        }
+
+        .rank-item:last-child {
+            border-bottom: none;
+        }
+
+        .rank-pos {
+            color: var(--secondary-color);
+            font-weight: 700;
+            width: 10%;
+            text-align: right;
+            padding-right: 20px;
+        }
+
+        .rank-name {
+            width: 60%;
+            text-transform: uppercase;
+            font-weight: 700
+        }
+
+        .rank-score {
+            width: 30%;
+            text-align: right;
+            font-weight: 700;
+        }
+
+
+        #revela-ranking {
+            /* Aseguramos que la animación de confetti se limite a esta vista */
+            overflow: hidden;
+        }
+
+
+
+        /******************************************************/
+
+        .confetti-dot {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background-color: white;
+            /* Color por defecto */
+            opacity: 0;
+
+            /* 🔑 CLAVE: Eliminamos left: 50% y top: 50% */
+            /* La posición de inicio será definida por el 0% de @keyframes */
+
+            /* Mantenemos el ajuste de transformación para centrar el punto si es necesario */
+            transform: translate(50%, -50%);
+            transition: background-color 1.1s;
+        }
+
+        /* Alternar colores y tamaños (Más variedad) */
+        .confetti-dot:nth-child(even) {
+            background-color: #000000;
+            /* Negro puro */
+            width: 130px;
+            height: 130px;
+        }
+
+        .confetti-dot:nth-child(3n) {
+            background-color: var(--secondary-color);
+            /* Dorado */
+            width: 120px;
+            height: 120px;
+        }
+
+        .confetti-dot:nth-child(5n) {
+            background-color: #ffffff;
+            /* Blanco */
+            width: 228px;
+            height: 228px;
+        }
+
+        /* 🔑 CLAVE: Animación de Explosión */
+        @keyframes confetti-pop {
+
+            0% {
+                opacity: 1;
+                /* Usamos 'left' y 'top' para posicionar el punto inicial. 
+                   El 'transform: translate(-50%, -50%)' en .confetti-dot 
+                   asegura que el centro del punto esté en (x, y). */
+                left: var(--x-start);
+                /* NUEVO: Define la posición horizontal de inicio */
+                top: var(--y-start);
+                /* NUEVO: Define la posición vertical de inicio */
+                transform: translate(-50%, -50%) scale(0.5);
+
+            }
+
+            20% {
+                opacity: 1;
+                /* Mantenemos la dispersión y la escala */
+                transform: translate(var(--x-end), var(--y-end)) scale(var(--s-mid));
+            }
+
+            50% {
+                opacity: 1;
+                transform: translate(var(--x-end), var(--y-end)) scale(var(--s-mid));
+            }
+
+            100% {
+                opacity: 0;
+                transform: translate(var(--x-end), var(--y-end)) scale(var(--s-end));
+            }
+        }
+
+        /********************************************************/
+
+        /* 🔑 Nuevo: Ocultar inicialmente los ítems del ranking */
+        .rank-item {
+            /* ... (tus estilos anteriores) ... */
+            opacity: 0;
+            /* Ocultar para la animación secuencial */
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+        }
+
+        /* 🔑 Nuevo: Estilo de entrada (opcional) */
+        .rank-item.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .rank-item {
+            transform: translateX(-50px);
+            /* Para que parezca que entran */
+        }
+
+        .imgLogo {
+            max-height: 60vh;
+            height: 60vh;
+        }
+
+
+
+        /* 1. Portada */
+        #portada {
+            position: relative;
+            /* Necesario para que la grilla de fondo se posicione correctamente */
+            overflow: hidden;
+        }
+
+        #portada h1 {
+            font-size: 6rem;
+            font-weight: 700;
+            z-index: 5;
+            /* Asegura que el texto esté sobre el logo y la grilla */
+        }
+
+        /* 🔑 EFECTO 1: Pulso Sutil para el Logo */
+        .imgLogo.logo-pulse {
+            animation: subtle-pulse 3s infinite alternate ease-in-out;
+        }
+
+        @keyframes subtle-pulse {
+            from {
+                transform: scale(1);
+            }
+
+            to {
+                transform: scale(1.05);
+                /* Pulso de 5% de zoom */
+            }
+        }
+
+        /* 🔑 EFECTO 2: Oscilación Sutil para el Texto (Alternativa: 'Wiggle') */
+        .text-wave {
+            /* Aplicamos una animación muy lenta para el efecto de "gravedad sutil" */
+            animation: subtle-wave 4s infinite linear;
+        }
+
+        @keyframes subtle-wave {
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(0);
+            }
+
+            25% {
+                transform: translateY(-5px) rotate(0.5deg);
+            }
+
+            75% {
+                transform: translateY(5px) rotate(-0.15deg);
+            }
+        }
+
+
+        /* 🔑 EFECTO 3: Grilla de Círculos Parpadeantes de Fondo */
+        #grid-confetti-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            /* Detrás de todo */
+            display: grid;
+            /* Creamos una grilla de puntos (ej. 15x15) */
+            grid-template-columns: repeat(15, 1fr);
+            grid-template-rows: repeat(15, 1fr);
+            gap: 0;
+            pointer-events: none;
+        }
+
+        .grid-dot {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .dot-inner {
+            /* Tamaño del círculo */
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.05);
+            /* Blanco muy sutil */
+            animation: subtle-blink 15s infinite ease-in-out;
+        }
+
+        /* 🔑 CLAVE: Variación de parpadeo */
+        @keyframes subtle-blink {
+
+            0%,
+            10% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.1;
+            }
+
+            90%,
+            100% {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="view-container">
+        <div id="grid-confetti-bg">
+        </div>
+
+        <div id="portada" class="view active">
+
+
+
+            <img src="img/logo-honda-hq.png" class="imgLogo logo-pulse" alt="">
+            <h1 class="display-1 mb-4 text-wave">TRIVIA</h1>
+        </div>
+
+
+        <div id="placa-pregunta" class="view d-flex flex-column">
+
+
+            <div class="row flex-grow-1"
+                style="height: 60%; align-items: center; justify-content: center; text-align: center; padding: 0 5rem;">
+                <div class="col-12">
+                    <h2 id="pregunta-texto" class="display-3"></h2>
+                    <!--p class="mt-4 destacado lead" id="pregunta-status">¡Tiempo para responder!</p-->
+                </div>
+            </div>
+
+            <div class="row g-3" id="opciones-row">
+
+                <div class="col-12 d-flex flex-wrap justify-content-center" id="opciones-container">
+                </div>
+
+            </div>
+
+        </div>
+        <div id="revela-respuesta" class="view">
+        </div>
+
+        <div id="placa-ranking" class="view">
+            <h1 class="display-2 mb-4  text-wave">TOP RANKING</h1>
+            <p class="lead">¡Prepárense para ver a los líderes!</p>
+        </div>
+        <div id="revela-ranking" class="view">
+            <div id="confetti-background" class="confetti-background"></div>
+
+            <h1 class="display-2 mb-4 destacado  text-wave" style="z-index: 2;">¡LOS GANADORES Y LAS GANADORAS!</h1>
+            <h3 class="lead mb-5 text-center text-uppercase" style="z-index: 2;">
+                Contestaron con mayor precisión y en menor tiempo</h3>
+            <ul id="ranking-list" class="list-unstyled" style="z-index: 2;">
+                <li class="rank-item text-center">Cargando...</li>
+            </ul>
+        </div>
+
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+
+
+    <script>
+        const socket = io();
+        const views = {
+            portada: document.getElementById('portada'),
+            placaPregunta: document.getElementById('placa-pregunta'),
+            placaRanking: document.getElementById('placa-ranking'),
+            revelaRanking: document.getElementById('revela-ranking')
+        };
+        const preguntaTexto = document.getElementById('pregunta-texto');
+        const opcionesContainer = document.getElementById('opciones-container');
+        const rankingList = document.getElementById('ranking-list');
+
+        let currentView = 'portada';
+        let preguntaData = null; // Almacena la pregunta actual (incluye respuestaCorrecta si viene del server)
+
+        // --- FUNCIONES DE VISTAS Y TRANSICIONES ---
+
+        /** * Cambia la vista activa con la animación slide/zoom. */
+        function switchView(viewId) {
+            // Desactiva todas las vistas
+            Object.values(views).forEach(view => {
+                view.classList.remove('active');
+            });
+
+            // Activa la vista solicitada
+            const targetView = views[viewId];
+            if (targetView) {
+                targetView.classList.add('active');
+                currentView = viewId;
+                console.log(`Vista cambiada a: ${viewId}`);
+            }
+        }
+
+        /** Renderiza la pregunta en la placa y la activa. */
+        function renderQuestion(data) {
+            preguntaData = data;
+
+            // Renderizar texto de pregunta
+            preguntaTexto.textContent = `${data.id}. ${data.texto_pregunta}`;
+            opcionesContainer.innerHTML = '';
+
+            // Limpiar cualquier clase 'correcta' o 'seleccionada' de la pregunta anterior
+            document.querySelectorAll('.opcion-box').forEach(box => {
+                box.classList.remove('correcta');
+                box.classList.remove('seleccionada');
+                // Limpiar del contenedor padre si aplica (opcion-col)
+                if (box.parentElement) {
+                    box.parentElement.classList.remove('correcta');
+                    box.parentElement.classList.remove('seleccionada');
+                }
+            });
+
+            // Renderizar opciones (Layout 2x2)
+            data.opciones.forEach(opcion => {
+                // Contenedor de columna (2x2: col-6 en mobile/desktop)
+                const colDiv = document.createElement('div');
+                colDiv.className = 'col-6 col-md-6 p-3 opcion-col'; // Clase 'opcion-col' para estilos
+
+                // Caja visual de la opción
+                const opcionBox = document.createElement('div');
+                opcionBox.className = 'opcion-box';
+                opcionBox.setAttribute('data-clave', opcion.clave);
+                opcionBox.textContent = `${opcion.clave}. ${opcion.texto}`;
+
+                colDiv.appendChild(opcionBox);
+                opcionesContainer.appendChild(colDiv);
+            });
+
+            //document.getElementById("pregunta-status").textContent = "¡Tiempo para responder!";
+            switchView('placaPregunta');
+        }
+
+        /** 🔑 NUEVA FUNCIÓN: Alterna el estado de revelación/destaque (clases .correcta y .seleccionada). */
+        function toggleRespuestaCorrecta() {
+            if (!preguntaData || !preguntaData.respuestaCorrecta) {
+                console.log("No hay pregunta activa o respuesta correcta definida.");
+                return;
+            }
+
+            const respuestaCorrecta = preguntaData.respuestaCorrecta;
+
+            // 1. Encontrar el contenedor de la respuesta correcta
+            let correctOptionContainer = null;
+            document.querySelectorAll('#opciones-container .opcion-col').forEach(colDiv => {
+                const opcionBox = colDiv.querySelector('.opcion-box');
+                if (opcionBox && opcionBox.getAttribute('data-clave') === respuestaCorrecta) {
+                    correctOptionContainer = colDiv;
+                }
+            });
+
+            if (!correctOptionContainer) {
+                console.error(`Contenedor de respuesta clave '${respuestaCorrecta}' no encontrado.`);
+                return;
+            }
+
+            // 2. Aplicar el TOGGLE: 
+            if (correctOptionContainer.classList.contains('correcta')) {
+                // Estado actual: REVELADO -> Ocultar
+                correctOptionContainer.classList.remove('correcta');
+                correctOptionContainer.classList.remove('seleccionada');
+                //document.getElementById("pregunta-status").textContent = "¡Tiempo terminado!";
+
+            } else {
+                // Estado actual: OCULTO -> Revelar y Destacar (se activa el pulse y el color)
+
+                // Limpiar cualquier destaque previo de seguridad
+                document.querySelectorAll('.opcion-col.correcta').forEach(el => {
+                    el.classList.remove('correcta');
+                    el.classList.remove('seleccionada');
+                });
+
+                correctOptionContainer.classList.add('correcta');
+                correctOptionContainer.classList.add('seleccionada'); // Aplicamos ambas clases al mismo tiempo
+                document.getElementById("pregunta-status").textContent = `Respuesta Correcta: ${respuestaCorrecta}`;
+            }
+        }
+
+        /** Renderiza la lista de ranking (Ganadores) uno a uno. */
+        function renderRanking(rankingData) {
+
+            // 1. Iniciar la animación de Confetti (Usamos la función coordinadora)
+            triggerMultipleConfetti(); // ⬅️ ¡CAMBIO A ESTA FUNCIÓN!
+
+
+            rankingList.innerHTML = ''; // Limpiar lista
+
+            const maxWinners = 17;
+            const displayData = rankingData.slice(0, maxWinners);
+
+            //comleta hasta maxWinners con "nn":
+            while (displayData.length < maxWinners) {
+                displayData.push({ posicion: displayData.length + 1, nombre: "nn", puntaje_final: 0 });
+            }
+
+
+
+            if (displayData.length === 0) {
+                rankingList.innerHTML = '<li class="rank-item text-center show">No hay ganadores con puntaje válido todavía.</li>';
+                switchView('revelaRanking');
+                return;
+            }
+
+            switchView('revelaRanking');
+
+            // 2. Iterar y mostrar cada ganador con retraso
+            displayData.forEach((item, index) => {
+                const li = document.createElement('li');
+                li.className = 'rank-item'; // Inicialmente oculto por el CSS
+
+                const liContent = `
+                    <span class="rank-pos">${item.posicion}.</span> 
+                    <span class="rank-name">${item.nombre}</span> 
+                    <span class="rank-score">${item.puntaje_final}</span>
+                `;
+                li.innerHTML = liContent;
+                rankingList.appendChild(li);
+
+                // 3. Mostrar el ítem después de un breve retraso
+                const delay = 1300 + index * 300; // 300ms base + 100ms por ítem (ajusta a tu gusto)
+
+                setTimeout(() => {
+                    li.classList.add('show');
+                }, delay);
+            });
+        }
+
+
+
+        /** Genera la grilla de círculos con retrasos aleatorios para parpadeo sutil. */
+        function initializeGridConfetti() {
+            const gridContainer = document.getElementById('grid-confetti-bg');
+            const rows = 15;
+            const cols = 15;
+            const totalDots = rows * cols;
+
+            for (let i = 0; i < totalDots; i++) {
+                const gridDot = document.createElement('div');
+                gridDot.className = 'grid-dot';
+
+                const innerDot = document.createElement('div');
+                innerDot.className = 'dot-inner';
+
+                // 🔑 CLAVE: Retraso aleatorio para desincronizar el parpadeo
+                const randomDelay = Math.random() * 15; // Retraso de 0 a 15 segundos
+                innerDot.style.animationDelay = `-${randomDelay}s`; // Usamos valor negativo para iniciar la animación en un punto aleatorio
+
+                gridDot.appendChild(innerDot);
+                gridContainer.appendChild(gridDot);
+            }
+        }
+
+        // --- LLAMADA INICIAL ---
+        // 🔑 Aseguramos que la grilla se cargue al inicio
+        initializeGridConfetti();
+
+
+
+
+        // --- HANDLERS DE COMANDOS (TECLADO Y SOCKET.IO) ---
+
+        document.addEventListener('keydown', async (e) => {
+            const key = e.key.toLowerCase();
+            console.log(`Tecla presionada: ${key}`);
+
+            // 🔑 FUNCIÓN PANTALLA COMPLETA (F/f)
+            if (key === 'f') {
+                const doc = document.documentElement;
+                if (!document.fullscreenElement) {
+                    doc.requestFullscreen ? doc.requestFullscreen() :
+                        doc.mozRequestFullScreen ? doc.mozRequestFullScreen() :
+                            doc.webkitRequestFullscreen ? doc.webkitRequestFullscreen() :
+                                doc.msRequestFullscreen ? doc.msRequestFullscreen() : null;
+                } else {
+                    document.exitFullscreen ? document.exitFullscreen() :
+                        document.mozCancelFullScreen ? document.mozCancelFullScreen() :
+                            document.webkitExitFullscreen ? document.webkitExitFullscreen() :
+                                document.msExitFullscreen ? document.msExitFullscreen() : null;
+                }
+                return;
+            }
+
+            // 1. Navegación principal (Barra espaciadora y R/Q/T)
+            if (key === ' ') { // BARRA ESPACIADORA: Iniciar / Portada
+                switchView('portada');
+            } else if (key === 'r') { // R/r: PLACA RANKING (Procesando)
+                switchView('placaRanking');
+            } else if (key === 't') { // T/t: Revela Ranking (Ganadores)
+                try {
+                    const response = await fetch('/ver-rank');
+                    const result = await response.json();
+                    if (result.ok) {
+                        renderRanking(result.data);
+                    } else {
+                        console.error("Error al obtener ranking:", result.error);
+                        alert("Error al obtener ranking: " + result.error);
+                    }
+                } catch (err) {
+                    console.error("Error de red al obtener ranking:", err);
+                    alert("Error de red al obtener ranking.");
+                }
+            } else if (key === 'q') { // 🔑 Q/q: REVELAR Y DESTACAR/OCULTAR RESPUESTA CORRECTA
+                toggleRespuestaCorrecta();
+            }
+
+
+            // 2. Placa Pregunta (1 - 4) - CARGA DE DATOS REALES
+            if (['1', '2', '3', '4'].includes(key)) {
+                const preguntaId = key;
+                console.log(`Solicitando Pregunta ID ${preguntaId} al servidor...`);
+
+                try {
+                    const response = await fetch(`/api/pregunta/${preguntaId}`);
+                    const result = await response.json();
+
+                    if (result.ok && result.data) {
+                        preguntaData = result.data;
+                        renderQuestion(result.data);
+                    } else {
+                        console.error("Error al cargar pregunta:", result.error);
+                        alert("Error al cargar pregunta: " + (result.error || "No se encontró la pregunta."));
+                    }
+
+                } catch (err) {
+                    console.error("Error de conexión al obtener pregunta:", err);
+                    alert("Error de conexión al obtener pregunta.");
+                }
+            }
+        });
+
+
+        const confettiContainer = document.getElementById('confetti-background');
+
+        /** 🔑 Función para generar la animación de Confetti con efecto EXPLOSIÓN mejorado
+         * @param {number} startX - Posición inicial X en Viewport Units (vw)
+         * @param {number} startY - Posición inicial Y en Viewport Units (vh)
+         */
+        function startConfettiAnimation(startX = 50, startY = 50) {
+            confettiContainer.innerHTML = '';
+            confettiContainer.classList.add('active');
+
+            const totalDots = 90;
+            const baseDuration = 8.8;
+            const maxRadius = 450;
+
+            for (let i = 0; i < totalDots; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'confetti-dot';
+
+                // 1. Calcular dispersión final (relativa al centro de la explosión)
+                const endX = (Math.random() * maxRadius * 2) - maxRadius;
+                const endY = (Math.random() * maxRadius * 2) - maxRadius;
+
+                // 2. Variación de velocidad y duración
+                const speedMultiplier = 0.8 + Math.random() * 0.4;
+                const duration = baseDuration * speedMultiplier;
+
+                // 3. Variación de tamaño
+                const startScale = 0.5 + Math.random() * 0.5;
+                const endScale = 0.1 + Math.random() * 0.2;
+
+                // 4. Retraso (ahora solo para la variación interna de la explosión)
+                const delay = Math.random() * 0.2;
+                console.log(`${startX}vw`);
+
+                // 5. Aplicar variables CSS
+                dot.style.setProperty('--x-start', `${startX}vw`); // Nuevo: Posición de inicio X
+                dot.style.setProperty('--y-start', `${startY}vh`); // Nuevo: Posición de inicio Y
+                dot.style.setProperty('--x-end', `${startX + endX}vw`); // Desplazamiento final desde el inicio
+                dot.style.setProperty('--y-end', `${startY + endY}vh`); // Desplazamiento final desde el inicio
+                dot.style.setProperty('--s-mid', `${startScale}`);
+                dot.style.setProperty('--s-end', `${endScale}`);
+
+                dot.style.animation = `confetti-pop ${duration}s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${delay}s forwards`;
+
+                confettiContainer.appendChild(dot);
+            }
+
+            // Desactivar el confetti después de que termine la animación
+            setTimeout(() => {
+                confettiContainer.classList.remove('active');
+                confettiContainer.innerHTML = '';
+            }, baseDuration * 1000 + 500);
+        }
+
+
+        /** 🔑 Dispara 4 explosiones secuenciales desde diferentes puntos. */
+        function triggerMultipleConfetti() {
+            // Los 4 puntos de origen de la explosión (en vw/vh)
+            const explosionPoints = [
+                { x: 25, y: 25 }, // Arriba izquierda
+                { x: 75, y: 75 }, // Abajo derecha
+                { x: 25, y: 75 }, // Abajo izquierda
+                { x: 75, y: 25 }  // Arriba derecha
+            ];
+
+            // Limpiar todo antes de empezar (ya que startConfettiAnimation borra y recrea)
+            confettiContainer.innerHTML = '';
+            confettiContainer.classList.add('active');
+
+            explosionPoints.forEach((point, index) => {
+                setTimeout(() => {
+                    // Llamamos a la función con el punto de origen
+                    startConfettiAnimation(point.x, point.y);
+                }, index * 800); // 400ms de retraso entre cada explosión
+            });
+
+            // Aseguramos que la animación se detenga una vez que la última explosión haya terminado.
+            // (4 explosiones * 400ms de retraso) + duración de la animación (1.8s + 0.5s buffer)
+            const finalTimeout = (explosionPoints.length * 400) + 2500;
+
+            setTimeout(() => {
+                confettiContainer.classList.remove('active');
+                confettiContainer.innerHTML = '';
+            }, finalTimeout);
+        }
+
+
+
+
+        // 🔑 HANDLERS DE SOCKET.IO
+
+        socket.on('mostrar_pregunta', (data) => {
+            // data debe contener { id, texto_pregunta, opciones: [...] }
+            renderQuestion(data);
+        });
+
+        // 🔑 Modificado para usar la función de TOGGLE unificada
+        socket.on('revelar_respuesta', (data) => {
+            // Asume que la data ya está cargada y el comando es para alternar
+            console.log("Comando 'revelar_respuesta' recibido por Socket.IO. Alternando destaque.");
+            toggleRespuestaCorrecta();
+        });
+
+        socket.on('mostrar_ranking_procesando', () => {
+            switchView('placaRanking');
+        });
+
+        socket.on('revelar_ranking', (data) => {
+            // data debe contener { ranking: [{posicion, nombre, puntaje_final}, ...] }
+            renderRanking(data.ranking);
+        });
+
+        socket.on('ir_a_inicio', () => {
+            switchView('portada');
+        });
+
+
+        // Conexión inicial
+        socket.on('connect', () => {
+            console.log("Conectado al servidor de control.");
+        });
+
+
+
+
+    </script>
+
+</body>
+
+</html>

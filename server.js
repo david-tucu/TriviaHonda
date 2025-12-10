@@ -316,25 +316,50 @@ app.get('/ver-rank', async (req, res) => {
   try {
     // 🔑 USAMOS la función getRanking y le pasamos el objeto 'pool'
     const rankingData = await getRanking(pool, 17); // 100 es un ejemplo de límite
-    
-    res.json({ 
-      ok: true, 
-      data: rankingData 
+
+    res.json({
+      ok: true,
+      data: rankingData
     });
 
   } catch (err) {
     console.error("Error en /ver-rank:", err);
-    res.status(500).json({ 
-      ok: false, 
-      error: 'Error interno del servidor al calcular el ranking.' 
+    res.status(500).json({
+      ok: false,
+      error: 'Error interno del servidor al calcular el ranking.'
     });
   }
 });
 
 
+// --- ENDPOINT: Obtener data de Pregunta para Pantalla ---
+app.get('/api/pregunta/:id', (req, res) => {
+  const id = parseInt(req.params.id, 10);
+
+  if (isNaN(id)) {
+    return res.status(400).json({ ok: false, error: 'ID de pregunta inválido.' });
+  }
+
+  const pregunta = getPreguntaPorId(id);
+
+  if (pregunta) {
+    // 🔑 Incluimos la respuesta correcta para uso administrativo/de pantalla
+    const preguntaConRespuesta = {
+      ...pregunta,
+      respuestaCorrecta: pregunta.correcta // Exponemos la clave 'correcta' con otro nombre
+    };
+    // Ya no usamos getPreguntaSinRespuesta aquí.
+    res.json({ ok: true, data: preguntaConRespuesta });
+  } else {
+    res.status(404).json({ ok: false, error: 'Pregunta no encontrada.' });
+  }
+});
+
+
+
 // Asegúrate de que esta función está disponible en tu server.js o archivo de rutas
 async function getRanking(pool, limit_ = 17) {
-  
+
   const limitValue = parseInt(limit_, 10) || 17;
 
   try {
@@ -403,13 +428,13 @@ async function getRanking(pool, limit_ = 17) {
             ORDER BY 
                 puntaje_final DESC
             LIMIT $1;
-        `, [limitValue]); 
+        `, [limitValue]);
 
     return rankingResult.rows;
 
   } catch (err) {
     console.error('Error al generar el ranking con cálculo de velocidad:', err);
-    throw new Error('No se pudo generar el ranking.'); 
+    throw new Error('No se pudo generar el ranking.');
   }
 }
 
