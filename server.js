@@ -298,15 +298,15 @@ app.get('/test-db', async (req, res) => {
   }
 });
 
-// --- ENDPOINT: Últimas 200 Participaciones ---
-app.get('/test-db-200', async (req, res) => {
+// --- ENDPOINT: Últimas 500 acciones ---
+app.get('/test-db-500', async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT id, dni_jugador, id_pregunta, respuesta_elegida, es_correcta, tiempo_respuesta FROM respuestas ORDER BY id DESC LIMIT 200'
+      'SELECT id, dni_jugador, id_pregunta, respuesta_elegida, es_correcta, tiempo_respuesta FROM respuestas ORDER BY id DESC LIMIT 500'
     );
     res.json({ ok: true, data: result.rows });
   } catch (err) {
-    console.error("Error en /test-db-200:", err);
+    console.error("Error en /test-db-500:", err);
     res.status(500).json({ ok: false, error: err.message });
   }
 });
