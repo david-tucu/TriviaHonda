@@ -20,7 +20,7 @@
   <header class="header-honda text-center pt-4">
     <div class="contenedor-img-header"><img src="img/logo-honda.png" class="img-logo" alt=""></div>
     <div class="d-flex justify-content-between align-items-center px-2">
-      <p class="m-0 small text-start" id="user-info"></p>
+      <p class="m-0 small text-start text-uppercase" id="user-info"></p>
       <button id="btnLogout" onclick="cerrarSesion()" class="btn btn-sm btn-outline-light" style="display:none;">
         SALIR
       </button>
@@ -82,6 +82,27 @@
     </div>
   </div>
 
+
+
+  <div class="modal fade" id="modalConfirmarCerrarSesion" tabindex="-1"
+    aria-labelledby="modalConfirmarCerrarSesionLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title" id="modalConfirmarCerrarSesionLabel">Estás por cerrar la sesión...</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-dark">Si cerrás la sesión se borrará tu DNI y Nombre de este dispositivo. Podrías perder tu
+            progreso en la trivia si ya está activa.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">CANCELAR</button>
+          <button type="button" class="btn btn-danger" id="btnConfirmarLogout">SALIR</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

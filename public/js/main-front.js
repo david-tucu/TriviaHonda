@@ -40,29 +40,51 @@ function checkLocalStorage() {
 
 // --- GESTIÓN DE SESIÓN ---
 
-function cerrarSesion() {
-    const confirmacion = confirm(
-        "Seguro que querés cerrar la sesión?\n\nVas a perder tu DNI y Nombre en este dispositivo y podrías perder tu progreso en la trivia si está activa."
-    );
+// NUEVA FUNCIÓN: Contiene la lógica REAL de cerrar la sesión
+function ejecutarCierreSesion() {
+    // 1. Borrar datos de identidad
+    localStorage.removeItem('dni');
+    localStorage.removeItem('nombre');
 
-    if (confirmacion) {
-        // 1. Borrar datos de identidad
-        localStorage.removeItem('dni');
-        localStorage.removeItem('nombre');
+    // 2. Limpiar todas las marcas de voto (voto_q_X) - SOLUCIÓN SEGURA
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+        const key = localStorage.key(i);
+        console.log("veo si borro " + key);
 
-        // Limpiar todos los indicadores de voto (voto_q_X)
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith('voto_q_')) {
-                localStorage.removeItem(key);
-            }
+        if (key && key.startsWith('voto_q_')) {
+            console.log("sí! Borrando: " + key);
+            localStorage.removeItem(key);
         }
-
-        // 2. Desconectar y reiniciar
-        socket.disconnect();
-        window.location.reload();
     }
+
+    // 3. Desconectar y reiniciar
+    socket.disconnect();
+    window.location.reload();
 }
+
+// Función existente (ahora solo muestra el modal)
+function cerrarSesion() {
+    // Muestra el modal de Bootstrap en lugar de confirm()
+    const modalConfirm = new bootstrap.Modal(document.getElementById('modalConfirmarCerrarSesion'), {});
+    modalConfirm.show();
+}
+
+// --- Asignar Listener al Botón de Confirmación del Modal ---
+document.getElementById('btnConfirmarLogout').addEventListener('click', (event) => {
+    
+    // 🔑 CORRECCIÓN CLAVE: Desenfocar el botón inmediatamente después del clic.
+    // Esto asegura que el foco no esté dentro del modal antes de ocultarlo.
+    event.currentTarget.blur(); 
+    
+    // 1. Ocultar el modal
+    const modalConfirm = bootstrap.Modal.getInstance(document.getElementById('modalConfirmarCerrarSesion'));
+    if (modalConfirm) {
+        modalConfirm.hide();
+    }
+    
+    // 2. Ejecutar la lógica de cierre de sesión
+    ejecutarCierreSesion();
+});
 
 
 function validarDNI(dni) {
@@ -233,7 +255,7 @@ function enviarRespuesta(opcion, btnSeleccionado) {
 
 socket.on("connect", () => {
     console.log("Conectado al backend. DNI:", userData.dni);
-    
+
     // Si ya estamos logueados (DNI existe), establecemos la UI de espera.
     // Esto corrige que se quede en "Esperando conexión..." si el DNI estaba guardado.
     if (userData.dni) {
@@ -259,7 +281,7 @@ socket.on("estadoJuego", (data) => {
         volverAportada(message);
     } else if (status === 'respuestaMostrada') {
         document.getElementById("voto-status").textContent = "¡Tiempo terminado! Revisando resultados...";
-    } else if (status === 'aResponder') { 
+    } else if (status === 'aResponder') {
         // 🔑 NUEVO: Indica al usuario que la votación está activa.
         document.getElementById("main-message").textContent = "¡A Responder!";
     }

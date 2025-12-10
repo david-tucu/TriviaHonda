@@ -214,10 +214,10 @@ io.on('connection', socket => {
 
     // 3. REGISTRAR O ACTUALIZAR USUARIO (upsert)
     try {
-      // 🔑 Solo INSERTAR o ACTUALIZAR el NOMBRE, ignorando el puntaje_total en el conflicto.
+      //  Solo INSERTAR o ACTUALIZAR el NOMBRE
       await pool.query(
-        `INSERT INTO usuarios (dni, nombre, puntaje_total)
-         VALUES ($1, $2, 0) -- Insertamos con puntaje inicial 0
+        `INSERT INTO usuarios (dni, nombre)
+         VALUES ($1, $2) 
          ON CONFLICT (dni) DO UPDATE
          SET nombre = EXCLUDED.nombre;`, // Solo actualizamos el nombre
         [dni, nombre]
@@ -226,7 +226,6 @@ io.on('connection', socket => {
       console.error('Error al asegurar el registro de usuario:', err);
     }
 
-    // 4. GUARDAR RESPUESTA EN LA BASE DE DATOS
     // 4. GUARDAR RESPUESTA EN LA BASE DE DATOS (UPSERT)
     try {
       // 🔑 Consulta con ON CONFLICT DO UPDATE
@@ -381,6 +380,11 @@ async function getRanking(pool, limit_ = 17) {
                     usuarios u
                 LEFT JOIN 
                     respuestas_validas r ON u.dni = r.dni_jugador
+                
+                -- Excluir usuarios con borrado lógico
+                WHERE 
+                    u.borrado = FALSE
+
                 GROUP BY 
                     u.dni, u.nombre
                 HAVING 
