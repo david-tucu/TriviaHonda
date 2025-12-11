@@ -109,7 +109,7 @@
 
         /* Estilo de la Pregunta (Auto-ajuste por ancho) */
         #pregunta-texto {
-            font-size: 4vw;
+            font-size: 5vw;
             /* Tamaño basado en el ancho de la vista */
             margin-bottom: 2rem;
             max-height: 100%;
@@ -146,7 +146,7 @@
 
         /* CLAVE 2: Estilo de las Cajas de Opción para Centrado Perfecto */
         .opcion-box {
-            font-size: 2vw;
+            font-size: 3vw;
             padding: 1.5rem 1rem;
             margin: 0.5rem;
             border-radius: 15px;
@@ -910,6 +910,9 @@
         // 🔑 HANDLERS DE SOCKET.IO
 
         socket.on('mostrar_pregunta', (data) => {
+           
+            console.log("Comando 'mostrar_pregunta' recibido por Socket.IO. Cargando pregunta...");
+            console.log("data recibida: ", data);
             // data debe contener { id, texto_pregunta, opciones: [...] }
             renderQuestion(data);
         });

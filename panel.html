@@ -166,6 +166,8 @@
     function enviarAccion(eventName, data = null, successMessage = "Acción enviada...") {
       updateStatus(successMessage, true);
 
+      console.log( "enviando accion: ", eventName, data);
+
       const payload = {
         action: eventName,
         data: data

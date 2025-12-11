@@ -96,82 +96,113 @@ io.on('connection', socket => {
     }
   }
 
-  socket.on('adminAction', data => {
-    const { action, data: payload } = data;
-    let broadcastEvent = '';
+  socket.on('adminAction', async (data) => {
+
+    console.log(data);
+
+    //FIX: Desestructurar la propiedad 'data' y renombrarla a 'payload'
+    const { action, data: payload } = data; // payload puede ser el ID de la pregunta (1, 2, 3, 4)
+
+    let broadcastEvent = null;
     let broadcastPayload = {};
+
+    console.log(`[ADMIN] Acción recibida: ${action} con payload: ${payload}`);
 
     switch (action) {
       case 'mostrarPregunta':
-        preguntaActivaId = payload; // payload debe ser el ID de la pregunta (e.g., 1)
+        
+        preguntaActivaId = payload;
         const pregunta = getPreguntaPorId(preguntaActivaId);
 
         if (pregunta) {
-          //Guardar el tiempo exacto en que la pregunta se activa para todos
-          tiempoInicioPregunta = Date.now(); // ASIGNACIÓN DEL TIEMPO DE INICIO
+          tiempoInicioPregunta = Date.now();
+          // 1. Emitir a la PANTALLA
+          broadcastEvent = 'mostrar_pregunta'; // ⬅️ Evento que pantalla.html escucha para renderQuestion
+          // (La pantalla puede hacer fetch o esperar la data. Por ahora, asumiremos que
+          // el server envía la data de la pregunta para evitar un fetch extra)
+          broadcastPayload = { ...getPreguntaSinRespuesta(pregunta), respuestaCorrecta: pregunta.correcta };
 
-          //log tiempo de inicio en consola
-          console.log(`Pregunta ID ${preguntaActivaId} activada a las ${new Date(tiempoInicioPregunta).toISOString()}`);
+          // 2. Emitir al MÓVIL (estadoJuego)
+          io.emit('estadoJuego', { status: 'aResponder', pregunta: broadcastPayload });
 
-
-          broadcastEvent = 'preguntaActiva';
-          // ENVIAR LA PREGUNTA COMPLETA (PERO LIMPIA)
-
-
-          broadcastPayload = getPreguntaSinRespuesta(pregunta);
+          socket.emit('actionConfirmed', { action, success: true });
         } else {
           console.error(`Error: Pregunta con ID ${preguntaActivaId} no encontrada.`);
           socket.emit('error', { msg: 'Pregunta no encontrada.' });
-          return; // Salir sin emitir
+          return;
         }
         break;
 
       case 'destacarRespuesta':
-        // Esta acción usa la pregunta activa actual para obtener la respuesta correcta
-        const pregActual = getPreguntaPorId(preguntaActivaId);
+        // 1. Emitir a la PANTALLA
+        broadcastEvent = 'revelar_respuesta'; // ⬅️ Evento que pantalla.html escucha para toggleRespuestaCorrecta
+        broadcastPayload = {};
 
-        broadcastEvent = 'estadoJuego';
-        broadcastPayload = {
-          status: 'respuestaMostrada',
-          respuestaCorrecta: pregActual ? pregActual.correcta : null
-        };
+        // 2. Emitir al MÓVIL (estadoJuego)
+        const respuestaCorrecta = getPreguntaPorId(preguntaActivaId)?.correcta;
+        io.emit('estadoJuego', { status: 'respuestaMostrada', respuestaCorrecta: respuestaCorrecta });
+
+        socket.emit('actionConfirmed', { action, success: true });
         break;
 
       case 'irAInicio':
-        preguntaActivaId = null; // Limpiar la pregunta activa
-        broadcastEvent = 'estadoJuego';
-        broadcastPayload = { status: 'inicio' };
+        preguntaActivaId = null;
+        // 1. Emitir a la PANTALLA
+        broadcastEvent = 'ir_a_inicio'; // ⬅️ Evento que pantalla.html escucha para switchView('portada')
+        broadcastPayload = {};
+
+        // 2. Emitir al MÓVIL (estadoJuego)
+        io.emit('estadoJuego', { status: 'inicio' });
+
+        socket.emit('actionConfirmed', { action, success: true });
         break;
 
       case 'pantallaRanking':
-        broadcastEvent = 'pantallaPrincipal';
-        broadcastPayload = { view: 'ranking' };
+        // 1. Emitir a la PANTALLA
+        broadcastEvent = 'mostrar_ranking_procesando'; // ⬅️ Evento que pantalla.html escucha para switchView('placaRanking')
+        broadcastPayload = {};
+
+        socket.emit('actionConfirmed', { action, success: true });
         break;
 
       case 'mostrarRanking':
-        broadcastEvent = 'estadoJuego';
-        broadcastPayload = { status: 'ganadoresMostrados' };
+        try {
+          const rankingData = await getRanking(pool, 17);
+          // 1. Emitir a la PANTALLA
+          broadcastEvent = 'revelar_ranking'; // ⬅️ Evento que pantalla.html escucha para renderRanking
+          broadcastPayload = { ranking: rankingData };
+
+          // 2. Emitir al MÓVIL (estadoJuego)
+          io.emit('estadoJuego', { status: 'ganadoresMostrados' });
+
+          socket.emit('actionConfirmed', { action, success: true });
+        } catch (error) {
+          console.error('Error al calcular/enviar ranking:', error);
+          socket.emit('error', { msg: 'Fallo al obtener el ranking.' });
+          return;
+        }
         break;
 
       case 'limpiarRespuestas':
+        // Lógica para limpiar las respuestas (si aplica)
+        // Esto solo es una acción interna del server, no emite a frontend
         respuestas = [];
         console.log('Respuestas limpiadas.');
-        break;
+        socket.emit('actionConfirmed', { action, success: true });
+        return; // No emitir broadcast
 
-      default: break;
+      default:
+        console.warn(`Acción desconocida: ${action}`);
+        socket.emit('actionConfirmed', { action, success: false });
+        return; // No emitir broadcast
     }
 
     if (broadcastEvent) {
+      // Broadcast a todas las pantallas (pantalla.html)
       io.emit(broadcastEvent, broadcastPayload);
-
-      // 🔑 AGREGAR LA SEÑAL DE "A RESPONDER" JUSTO DESPUÉS DE ENVIAR LA PREGUNTA
-      if (action === 'mostrarPregunta') {
-        io.emit('estadoJuego', { status: 'aResponder' });
-      }
     }
-
-    socket.emit('actionConfirmed', { action, success: !!broadcastEvent, event: broadcastEvent });
   });
+
 
   // Asegúrate de que tu 'pool' de PostgreSQL esté importado correctamente
 
