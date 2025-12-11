@@ -98,7 +98,7 @@
 
         /* Fila 1 (60% Alto): Contenedor de la Pregunta */
         #placa-pregunta .row:first-child {
-            height: 50%;
+            height: 40%;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -119,7 +119,9 @@
             font-weight: bold;
         }
 
-        /* CLAVE 1: Ajuste de la Fila de Opciones (40% de Alto) */
+
+
+        /* Ajuste de la Fila de Opciones (50% de Alto) */
         #opciones-row {
             height: 50%;
             width: 100%;
@@ -274,6 +276,9 @@
             /* Aseguramos que la animación de confetti se limite a esta vista */
             overflow: hidden;
         }
+
+
+
 
 
 
@@ -505,19 +510,13 @@
 
 
             <div class="row flex-grow-1"
-                style="height: 60%; align-items: center; justify-content: center; text-align: center; padding: 0 5rem;">
+                style="align-items: center; justify-content: center; text-align: center; padding: 0 5rem;">
                 <div class="col-12">
                     <h2 id="pregunta-texto" class="display-3"></h2>
                     <!--p class="mt-4 destacado lead" id="pregunta-status">¡Tiempo para responder!</p-->
                 </div>
             </div>
 
-            <div class="row g-3" id="opciones-row">
-
-                <div class="col-12 d-flex flex-wrap justify-content-center" id="opciones-container">
-                </div>
-
-            </div>
 
         </div>
         <div id="revela-respuesta" class="view">
@@ -679,7 +678,7 @@
 
             //comleta hasta maxWinners con "nn":
             while (displayData.length < maxWinners) {
-                displayData.push({ posicion: displayData.length + 1, nombre: "nn", puntaje_final: 0 });
+                displayData.push({ posicion: displayData.length + 1, nombre: "", puntaje_final: "" });
             }
 
 
@@ -910,7 +909,7 @@
         // 🔑 HANDLERS DE SOCKET.IO
 
         socket.on('mostrar_pregunta', (data) => {
-           
+
             console.log("Comando 'mostrar_pregunta' recibido por Socket.IO. Cargando pregunta...");
             console.log("data recibida: ", data);
             // data debe contener { id, texto_pregunta, opciones: [...] }
