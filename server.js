@@ -311,7 +311,7 @@ app.get('/test', (req, res) => {
 });
 
 app.get('/pantalla', (req, res) => {
-  res.sendFile(path.join(__dirname, 'pulic', 'pantalla.html'));
+  res.sendFile(path.join(__dirname, 'public', 'pantalla.html'));
 });
 
 app.get('/panel', (req, res) => {
