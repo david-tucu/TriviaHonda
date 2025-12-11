@@ -71,17 +71,17 @@ function cerrarSesion() {
 
 // --- Asignar Listener al Botón de Confirmación del Modal ---
 document.getElementById('btnConfirmarLogout').addEventListener('click', (event) => {
-    
+
     // 🔑 CORRECCIÓN CLAVE: Desenfocar el botón inmediatamente después del clic.
     // Esto asegura que el foco no esté dentro del modal antes de ocultarlo.
-    event.currentTarget.blur(); 
-    
+    event.currentTarget.blur();
+
     // 1. Ocultar el modal
     const modalConfirm = bootstrap.Modal.getInstance(document.getElementById('modalConfirmarCerrarSesion'));
     if (modalConfirm) {
         modalConfirm.hide();
     }
-    
+
     // 2. Ejecutar la lógica de cierre de sesión
     ejecutarCierreSesion();
 });
@@ -138,10 +138,9 @@ function guardarDatos() {
     const modal = bootstrap.Modal.getInstance(document.getElementById('modalIngreso'));
     modal.hide();
 
-    // Si la conexión se inició, forzar la UI de espera
-    //document.getElementById("main-message").textContent = "Esperando próxima pregunta...";
-    //document.getElementById("spinner").classList.remove('d-none');
-
+    // Actualizar la UI inmediatamente a "Conectando..."
+    //document.getElementById("main-message").textContent = "Conectando con el servidor...";
+    //document.getElementById("spinner").classList.remove('d-none'); // Muestra el spinner
 
     socket.connect();
 }
@@ -219,7 +218,7 @@ function volverAportada(message) {
     preguntaActual = null;
     yaVoto = false;
     document.getElementById("pregunta-area").style.display = "none";
-    document.getElementById("main-message").textContent = message || "Esperando próxima pregunta...";
+    document.getElementById("main-message").textContent = message || "Esperando pregunta...";
     document.getElementById("spinner").classList.remove('d-none');
 }
 
@@ -264,28 +263,54 @@ socket.on("connect", () => {
     }
 });
 
+
 socket.on("preguntaActiva", (data) => {
+
     // Al recibir la pregunta, renderizamos el HTML para que el usuario pueda votar.
     renderQuestion(data);
+
 });
+
+
+// --- HANDLERS DE SOCKET.IO ---
 
 socket.on("estadoJuego", (data) => {
     // Maneja todos los cambios de estado del juego (inicio, fin de tiempo, ranking, etc.)
-    const status = data.status;
+    const { status, pregunta, respuestaCorrecta } = data; // 🔑 CLAVE: Desestructurar 'pregunta' y 'respuestaCorrecta'
+
+    console.log(`Estado del juego recibido: ${status}`);
 
     if (status === 'inicio' || status === 'ganadoresMostrados') {
         let message = (status === 'inicio') ?
             "Esperando indicaciones del moderador." :
-            "";
+            "¡Ranking Finalizado!";
         // Vuelve a la pantalla de espera
         volverAportada(message);
     } else if (status === 'respuestaMostrada') {
         document.getElementById("voto-status").textContent = "¡Tiempo terminado! Revisando resultados...";
+
+        // 🔑 Opcional: Destacar la respuesta correcta en el móvil si la envía el servidor
+        if (preguntaActual && respuestaCorrecta) {
+            highlightCorrectAnswer(respuestaCorrecta);
+        }
     } else if (status === 'aResponder') {
-        // 🔑 NUEVO: Indica al usuario que la votación está activa.
-        document.getElementById("main-message").textContent = "¡A Responder!";
+        // 🔑 FIX CLAVE: Si la pregunta viene en el payload y no la tenemos, la renderizamos
+        if (pregunta && pregunta.id !== (preguntaActual ? preguntaActual.id : null)) {
+            // Es una pregunta nueva: renderizar
+            renderQuestion(pregunta);
+            document.getElementById("main-message").textContent = `¡A Responder!`;
+
+            // NOTA: Si ya votó (yaVoto es true), renderQuestion ya lo manejará
+
+        } else if (preguntaActual) {
+            // Ya tenemos la pregunta, solo actualizamos el mensaje si no hay voto
+            if (!yaVoto) {
+                document.getElementById("main-message").textContent = "¡A Responder!";
+            }
+        }
     }
 });
+
 
 socket.on("respuestaOk", () => {
     // Se confirma que el voto fue registrado en el servidor.
@@ -298,6 +323,11 @@ socket.on("error", (data) => {
         yaVoto = true;
         disableOptions(null);
         document.getElementById("voto-status").textContent = "Tu voto ya está registrado para esta pregunta.";
+    } else if ( data.msg === 'La pregunta aún no ha comenzado o ya finalizó.') {
+        //no desacativa las opciones
+
+
+    
     } else {
         console.error("Error del servidor:", data.msg);
         document.getElementById("voto-status").textContent = data.msg;

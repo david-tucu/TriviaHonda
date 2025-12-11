@@ -30,6 +30,7 @@ const io = new Server(server, {
 });
 
 
+
 // --- FUNCIONES DE UTILIDAD ---
 
 /** Obtiene una pregunta por su ID. */
@@ -90,6 +91,7 @@ io.on('connection', socket => {
   if (preguntaActivaId !== null) {
     const pregunta = getPreguntaPorId(preguntaActivaId);
     if (pregunta) {
+      console.log("Late Joing: " + pregunta);
       socket.emit('preguntaActiva', getPreguntaSinRespuesta(pregunta));
       // 💡 Al hacer Late Join, también notificamos que la votación está activa.
       socket.emit('estadoJuego', { status: 'aResponder' });
@@ -308,9 +310,14 @@ app.get('/test', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'front-trivia.html'));
 });
 
+app.get('/pantalla', (req, res) => {
+  res.sendFile(path.join(__dirname, 'pulic', 'pantalla.html'));
+});
+
 app.get('/panel', (req, res) => {
   res.sendFile(path.join(__dirname, 'panel.html'));
 });
+
 
 // ENDPOINTS ADMIN
 app.get('/admin/respuestas', (req, res) => res.json(respuestas));
