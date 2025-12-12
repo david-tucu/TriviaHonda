@@ -297,7 +297,7 @@ function detenerCuentaRegresivaMovil() {
     const cajaMensaje = document.getElementById("main-message");
     if (cajaMensaje) {
         cajaMensaje.classList.remove("d-none");
-        cajaMensaje.textContent = "Esperando próxima pregunta...";
+        cajaMensaje.textContent = "Esperando indicaciones del moderador.";
     }
 
 
