@@ -10,6 +10,7 @@ module.exports = [
     ],
     "correcta": "B" 
   },
+  /*
   {
     "id": 2,
     "texto_pregunta": "¿Cómo se llama el presidente de Honda Motor de Argentina en 2025?",
@@ -18,6 +19,18 @@ module.exports = [
       { "clave": "B", "texto": "Toshihiro Mibe" },
       { "clave": "C", "texto": "Inoue Keiji" },
       { "clave": "D", "texto": "Arata Ichinose" }
+    ],
+    "correcta": "C" 
+  },
+  */
+ {
+    "id": 2,
+    "texto_pregunta": "¿Cuántos años cumplió Honda Motor Argentina en 2025?",
+    "opciones": [
+      { "clave": "A", "texto": "46 años" },
+      { "clave": "B", "texto": "48 años" },
+      { "clave": "C", "texto": "47 años" },
+      { "clave": "D", "texto": "49 años" }
     ],
     "correcta": "C" 
   },

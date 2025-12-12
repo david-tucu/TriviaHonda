@@ -393,7 +393,17 @@ socket.on("estadoJuego", (data) => {
         // Vuelve a la pantalla de espera
         volverAportada(message);
     } else if (status === 'respuestaMostrada') {
-        document.getElementById("voto-status").textContent = "¡Tiempo terminado! Revisando resultados...";
+
+        console.log("Respuesta mostrada. Termina posibilidad de votar.");
+
+        document.getElementById("voto-status").textContent = "¡Tiempo terminado!";
+
+        // Detener el timer
+        detenerCuentaRegresivaMovil();
+
+
+        // desactivar las opciones
+        disableOptions(null);
 
         /*
         //Opcional: Destacar la respuesta correcta en el móvil si la envía el servidor
