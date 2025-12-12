@@ -93,7 +93,7 @@ if (process.env.NODE_ENV === 'production' && process.env.REDIS_URL) {
 
 // --- Variables de estado (Solo usadas como fallback si Redis falla) ---
 let preguntaActivaId = null; // ID de la pregunta activa
-let respuestas = []; // memoria temporal de respuestas. **RECOMENDADO: Eliminar en producción (es inconsistente).**
+//let respuestas = []; // memoria temporal de respuestas. **RECOMENDADO: Eliminar en producción (es inconsistente).**
 let tiempoInicioPregunta = null; // para calcular la diferencia al guardar
 
 
@@ -260,6 +260,7 @@ io.on('connection', async socket => { //  CAMBIO 1: HACER LA FUNCIÓN ASÍNCRONA
 
       // ... (el resto de los casos se mantiene) ...
 
+      /*
       case 'limpiarRespuestas':
         // Lógica para limpiar las respuestas (si aplica)
         // Esto solo es una acción interna del server, no emite a frontend
@@ -267,6 +268,7 @@ io.on('connection', async socket => { //  CAMBIO 1: HACER LA FUNCIÓN ASÍNCRONA
         console.log('Respuestas limpiadas.');
         socket.emit('actionConfirmed', { action, success: true });
         return; // No emitir broadcast
+      */
 
       default:
         console.warn(`Acción desconocida: ${action}`);
@@ -380,7 +382,8 @@ io.on('connection', async socket => { //  CAMBIO 1: HACER LA FUNCIÓN ASÍNCRONA
     }
 
     // 6. GUARDAR EN MEMORIA (Opcional: solo si mantienes la variable 'respuestas = []' temporal)
-    // ⚠️ RECOMENDACIÓN: Eliminar esta variable en producción si usas escalabilidad.
+    // RECOMENDACIÓN: Eliminar esta variable en producción si usas escalabilidad.
+    /*
     respuestas.push({
       dni,
       nombre,
@@ -389,6 +392,7 @@ io.on('connection', async socket => { //  CAMBIO 1: HACER LA FUNCIÓN ASÍNCRONA
       es_correcta: esCorrecta,
       tiempo_respuesta: latencia,
     });
+    */
 
   });
 
@@ -419,7 +423,7 @@ app.get('/panel', (req, res) => {
 
 
 // ENDPOINTS ADMIN
-app.get('/admin/respuestas', (req, res) => res.json(respuestas));
+
 app.get('/admin/preguntas', (req, res) => res.json(ALL_QUESTIONS));
 
 
