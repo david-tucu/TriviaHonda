@@ -59,7 +59,7 @@ const esRespuestaCorrecta = (id, respuesta) => {
 };
 
 
-// 🔑 NUEVO: Cliente y Clave Global de Redis
+//  NUEVO: Cliente y Clave Global de Redis
 let redisClient = null;
 const REDIS_STATE_KEY = 'trivia_active_state'; // Clave fija donde guardaremos el estado
 
@@ -69,7 +69,7 @@ if (process.env.NODE_ENV === 'production' && process.env.REDIS_URL) {
   const { createAdapter } = require('@socket.io/redis-adapter');
 
   // 1. Crear el Cliente Principal (Para Estado + Publicar)
-  redisClient = createClient({ url: process.env.REDIS_URL }); // 🔑 ASIGNAMOS A LA VARIABLE GLOBAL
+  redisClient = createClient({ url: process.env.REDIS_URL }); //  ASIGNAMOS A LA VARIABLE GLOBAL
 
   // 2. Crear el Cliente Suscriptor (Exclusivo para el Adapter)
   const subClient = redisClient.duplicate();
@@ -87,7 +87,7 @@ if (process.env.NODE_ENV === 'production' && process.env.REDIS_URL) {
 } else {
   // En desarrollo, usamos el mock del archivo redis.js
   console.log("Modo desarrollo: Usando Mock de Redis para estado.");
-  redisClient = require('./redis'); // 🔑 ASIGNAMOS EL MOCK A LA VARIABLE GLOBAL
+  redisClient = require('./redis'); //  ASIGNAMOS EL MOCK A LA VARIABLE GLOBAL
 }
 
 
@@ -98,7 +98,7 @@ let tiempoInicioPregunta = null; // para calcular la diferencia al guardar
 
 
 // --- Lógica Socket.IO ---
-io.on('connection', async socket => { // 🔑 CAMBIO 1: HACER LA FUNCIÓN ASÍNCRONA
+io.on('connection', async socket => { //  CAMBIO 1: HACER LA FUNCIÓN ASÍNCRONA
 
   console.log('Cliente conectado:', socket.id);
 
@@ -132,7 +132,7 @@ io.on('connection', async socket => { // 🔑 CAMBIO 1: HACER LA FUNCIÓN ASÍNC
   }
 
 
-  socket.on('adminAction', async (data) => { // 🔑 CAMBIO 2: HACER LA FUNCIÓN ASÍNCRONA
+  socket.on('adminAction', async (data) => { //  CAMBIO 2: HACER LA FUNCIÓN ASÍNCRONA
 
     console.log(data);
 
@@ -162,7 +162,7 @@ io.on('connection', async socket => { // 🔑 CAMBIO 1: HACER LA FUNCIÓN ASÍNC
       //PARA MOSTRAR LOS GANADORES:
       case 'mostrarRanking':
         try {
-          // 🔑 1. Llama a la función de la DB para calcular el ranking
+          //  1. Llama a la función de la DB para calcular el ranking
           const rankingData = await getRanking(pool, 17);
 
           // 1. Emitir a la PANTALLA
@@ -194,10 +194,10 @@ io.on('connection', async socket => { // 🔑 CAMBIO 1: HACER LA FUNCIÓN ASÍNC
 
           tiempoInicioPregunta = Date.now();
 
-          preguntaTiempoLimiteMs = tiempoMs; // 🔑 NUEVO: Guardar el tiempo globalmente (si aplica)
+          preguntaTiempoLimiteMs = tiempoMs; //  NUEVO: Guardar el tiempo globalmente (si aplica)
 
 
-          // 🔑 LUGAR 2: FIX ESCALABILIDAD - Guardar el estado en Redis
+          //  LUGAR 2: FIX ESCALABILIDAD - Guardar el estado en Redis
           await redisClient.set(REDIS_STATE_KEY, JSON.stringify({
             preguntaId: preguntaActivaId,
             timestamp: tiempoInicioPregunta,
@@ -243,9 +243,9 @@ io.on('connection', async socket => { // 🔑 CAMBIO 1: HACER LA FUNCIÓN ASÍNC
 
       case 'irAInicio':
         preguntaActivaId = null;
-        tiempoInicioPregunta = null; // 🔑 Limpiar el valor local también
+        tiempoInicioPregunta = null; //  Limpiar el valor local también
 
-        // 🔑 LUGAR 3: FIX ESCALABILIDAD - BORRAR DE REDIS
+        //  LUGAR 3: FIX ESCALABILIDAD - BORRAR DE REDIS
         await redisClient.del(REDIS_STATE_KEY);
 
         // 1. Emitir a la PANTALLA
@@ -331,7 +331,7 @@ io.on('connection', async socket => { // 🔑 CAMBIO 1: HACER LA FUNCIÓN ASÍNC
     // CALCULO DE LA LATENCIA: Tiempo actual - Tiempo de inicio de la pregunta
     const latencia = Date.now() - tiempoInicioReal;
 
-    // 🔑 ELIMINADO: La validación contra preguntaActivaId local que estaba aquí ya no es necesaria
+    //  ELIMINADO: La validación contra preguntaActivaId local que estaba aquí ya no es necesaria
 
     // 1. VALIDAR SI EL DNI YA VOTÓ ESTA PREGUNTA (en memoria temporal o DB)
     // ... (Tu código de validación de voto sigue aquí) ...
@@ -356,7 +356,7 @@ io.on('connection', async socket => { // 🔑 CAMBIO 1: HACER LA FUNCIÓN ASÍNC
 
     // 4. GUARDAR RESPUESTA EN LA BASE DE DATOS (UPSERT)
     try {
-      // 🔑 Consulta con ON CONFLICT DO UPDATE
+      //  Consulta con ON CONFLICT DO UPDATE
       await pool.query(
         `INSERT INTO respuestas (dni_jugador, id_pregunta, respuesta_elegida, es_correcta, tiempo_respuesta)
          VALUES ($1, $2, $3, $4, $5)
@@ -458,7 +458,7 @@ app.get('/test-db-500', async (req, res) => {
 // --- ENDPOINT: Ranking General con Cálculo de Velocidad ---
 app.get('/ver-rank', async (req, res) => {
   try {
-    // 🔑 USAMOS la función getRanking y le pasamos el objeto 'pool'
+    //  USAMOS la función getRanking y le pasamos el objeto 'pool'
     const rankingData = await getRanking(pool, 17); // 100 es un ejemplo de límite
 
     res.json({
@@ -487,7 +487,7 @@ app.get('/api/pregunta/:id', (req, res) => {
   const pregunta = getPreguntaPorId(id);
 
   if (pregunta) {
-    // 🔑 Incluimos la respuesta correcta para uso administrativo/de pantalla
+    //  Incluimos la respuesta correcta para uso administrativo/de pantalla
     const preguntaConRespuesta = {
       ...pregunta,
       respuestaCorrecta: pregunta.correcta // Exponemos la clave 'correcta' con otro nombre

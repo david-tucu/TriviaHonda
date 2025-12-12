@@ -293,7 +293,7 @@
             /* Color por defecto */
             opacity: 0;
 
-            /* 🔑 CLAVE: Eliminamos left: 50% y top: 50% */
+            /*  CLAVE: Eliminamos left: 50% y top: 50% */
             /* La posición de inicio será definida por el 0% de @keyframes */
 
             /* Mantenemos el ajuste de transformación para centrar el punto si es necesario */
@@ -323,7 +323,7 @@
             height: 228px;
         }
 
-        /* 🔑 CLAVE: Animación de Explosión */
+        /*  CLAVE: Animación de Explosión */
         @keyframes confetti-pop {
 
             0% {
@@ -358,7 +358,7 @@
 
         /********************************************************/
 
-        /* 🔑 Nuevo: Ocultar inicialmente los ítems del ranking */
+        /*  Nuevo: Ocultar inicialmente los ítems del ranking */
         .rank-item {
             /* ... (tus estilos anteriores) ... */
             opacity: 0;
@@ -366,7 +366,7 @@
             transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
         }
 
-        /* 🔑 Nuevo: Estilo de entrada (opcional) */
+        /*  Nuevo: Estilo de entrada (opcional) */
         .rank-item.show {
             opacity: 1;
             transform: translateX(0);
@@ -398,7 +398,7 @@
             /* Asegura que el texto esté sobre el logo y la grilla */
         }
 
-        /* 🔑 EFECTO 1: Pulso Sutil para el Logo */
+        /*  EFECTO 1: Pulso Sutil para el Logo */
         .imgLogo.logo-pulse {
             animation: subtle-pulse 3s infinite alternate ease-in-out;
         }
@@ -414,7 +414,7 @@
             }
         }
 
-        /* 🔑 EFECTO 2: Oscilación Sutil para el Texto (Alternativa: 'Wiggle') */
+        /*  EFECTO 2: Oscilación Sutil para el Texto (Alternativa: 'Wiggle') */
         .text-wave {
             /* Aplicamos una animación muy lenta para el efecto de "gravedad sutil" */
             animation: subtle-wave 4s infinite linear;
@@ -437,7 +437,7 @@
         }
 
 
-        /* 🔑 EFECTO 3: Grilla de Círculos Parpadeantes de Fondo */
+        /*  EFECTO 3: Grilla de Círculos Parpadeantes de Fondo */
         #grid-confetti-bg {
             position: absolute;
             top: 0;
@@ -472,7 +472,7 @@
             animation: subtle-blink 15s infinite ease-in-out;
         }
 
-        /* 🔑 CLAVE: Variación de parpadeo */
+        /*  CLAVE: Variación de parpadeo */
         @keyframes subtle-blink {
 
             0%,
@@ -727,7 +727,7 @@
             switchView('placaPregunta');
         }
 
-        /** 🔑 NUEVA FUNCIÓN: Alterna el estado de revelación/destaque (clases .correcta y .seleccionada). */
+        /**  NUEVA FUNCIÓN: Alterna el estado de revelación/destaque (clases .correcta y .seleccionada). */
         function toggleRespuestaCorrecta() {
             if (!preguntaData || !preguntaData.respuestaCorrecta) {
                 console.log("No hay pregunta activa o respuesta correcta definida.");
@@ -846,7 +846,7 @@
                 const innerDot = document.createElement('div');
                 innerDot.className = 'dot-inner';
 
-                // 🔑 CLAVE: Retraso aleatorio para desincronizar el parpadeo
+                //  CLAVE: Retraso aleatorio para desincronizar el parpadeo
                 const randomDelay = Math.random() * 15; // Retraso de 0 a 15 segundos
                 innerDot.style.animationDelay = `-${randomDelay}s`; // Usamos valor negativo para iniciar la animación en un punto aleatorio
 
@@ -856,7 +856,7 @@
         }
 
         // --- LLAMADA INICIAL ---
-        // 🔑 Aseguramos que la grilla se cargue al inicio
+        //  Aseguramos que la grilla se cargue al inicio
         initializeGridConfetti();
 
 
@@ -868,7 +868,7 @@
             const key = e.key.toLowerCase();
             console.log(`Tecla presionada: ${key}`);
 
-            // 🔑 FUNCIÓN PANTALLA COMPLETA (F/f)
+            //  FUNCIÓN PANTALLA COMPLETA (F/f)
             if (key === 'f') {
                 const doc = document.documentElement;
                 if (!document.fullscreenElement) {
@@ -904,7 +904,7 @@
                     console.error("Error de red al obtener ranking:", err);
                     alert("Error de red al obtener ranking.");
                 }
-            } else if (key === 'q') { // 🔑 Q/q: REVELAR Y DESTACAR/OCULTAR RESPUESTA CORRECTA
+            } else if (key === 'q') { //  Q/q: REVELAR Y DESTACAR/OCULTAR RESPUESTA CORRECTA
                 toggleRespuestaCorrecta();
             }
 
@@ -936,7 +936,7 @@
 
         const confettiContainer = document.getElementById('confetti-background');
 
-        /** 🔑 Función para generar la animación de Confetti con efecto EXPLOSIÓN mejorado
+        /**  Función para generar la animación de Confetti con efecto EXPLOSIÓN mejorado
          * @param {number} startX - Posición inicial X en Viewport Units (vw)
          * @param {number} startY - Posición inicial Y en Viewport Units (vh)
          */
@@ -989,7 +989,7 @@
         }
 
 
-        /** 🔑 Dispara 4 explosiones secuenciales desde diferentes puntos. */
+        /**  Dispara 4 explosiones secuenciales desde diferentes puntos. */
         function triggerMultipleConfetti() {
             // Los 4 puntos de origen de la explosión (en vw/vh)
             const explosionPoints = [
@@ -1082,7 +1082,7 @@
             }, 1000); // 1000 ms = 1 segundo
         }
 
-        // 🔑 HANDLERS DE SOCKET.IO
+        //  HANDLERS DE SOCKET.IO
 
         socket.on('mostrar_pregunta', (data) => {
 
@@ -1093,7 +1093,7 @@
             iniciarCuentaRegresiva(data.tiempoLimiteMs);
         });
 
-        // 🔑 Modificado para usar la función de TOGGLE unificada
+        //  Modificado para usar la función de TOGGLE unificada
         socket.on('revelar_respuesta', (data) => {
             detenerCuentaRegresiva(); // Detener la cuenta regresiva
             // Asume que la data ya está cargada y el comando es para alternar

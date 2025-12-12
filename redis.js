@@ -18,11 +18,11 @@ if (process.env.NODE_ENV === 'production') {
     console.log("Redis desactivado en desarrollo (usando mock)");
 
     client = {
-        // 🔑 MODIFICADO: Devuelve el valor del mockStore
+        //  MODIFICADO: Devuelve el valor del mockStore
         async get(key) {
             return mockStore[key] || null;
         },
-        // 🔑 MODIFICADO: Guarda el valor en el mockStore (ignorando TTL por simplicidad)
+        //  MODIFICADO: Guarda el valor en el mockStore (ignorando TTL por simplicidad)
         async set(key, value, options) {
             mockStore[key] = value;
             return "OK";
@@ -31,7 +31,7 @@ if (process.env.NODE_ENV === 'production') {
             delete mockStore[key]; // Simula la eliminación
             return 1;
         },
-        // 🔑 NUEVO: Función para ver el store (útil para debugging)
+        //  NUEVO: Función para ver el store (útil para debugging)
         async debugStore() {
             return mockStore;
         }

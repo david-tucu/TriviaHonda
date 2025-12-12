@@ -72,7 +72,7 @@ function cerrarSesion() {
 // --- Asignar Listener al Botón de Confirmación del Modal ---
 document.getElementById('btnConfirmarLogout').addEventListener('click', (event) => {
 
-    // 🔑 CORRECCIÓN CLAVE: Desenfocar el botón inmediatamente después del clic.
+    //  CORRECCIÓN CLAVE: Desenfocar el botón inmediatamente después del clic.
     // Esto asegura que el foco no esté dentro del modal antes de ocultarlo.
     event.currentTarget.blur();
 
@@ -156,7 +156,7 @@ function renderQuestion(pregunta) {
     document.getElementById("voto-status").textContent = "";
     document.getElementById("pregunta-texto").textContent = pregunta.texto_pregunta;
 
-    // 🔑 2. OBTENER EL VOTO GUARDADO: Lee la clave de la opción (A, B, C, D)
+    //  2. OBTENER EL VOTO GUARDADO: Lee la clave de la opción (A, B, C, D)
     const votoClave = localStorage.getItem(`voto_q_${pregunta.id}`);
 
     // 3. Crear HTML de Opciones
@@ -165,7 +165,7 @@ function renderQuestion(pregunta) {
 
     pregunta.opciones.forEach(opcion => {
         const btn = document.createElement('button');
-        // 🔑 CAMBIO CLAVE: Usamos 'btn-outline-dark' y 'btn-opcion' como base para que coincida con disableOptions
+        //  CAMBIO CLAVE: Usamos 'btn-outline-dark' y 'btn-opcion' como base para que coincida con disableOptions
         btn.className = 'btn btn-outline-dark btn-lg w-100 mb-2 btn-opcion';
         btn.setAttribute('data-opcion', opcion.clave);
         btn.textContent = `${opcion.clave}. ${opcion.texto}`;
@@ -177,7 +177,7 @@ function renderQuestion(pregunta) {
     document.getElementById("pregunta-area").style.display = "block";
     document.getElementById("spinner").classList.add('d-none');
 
-    // 🔑 4. APLICAR ESTADO DE VOTO LOCAL Y DESTACAR
+    //  4. APLICAR ESTADO DE VOTO LOCAL Y DESTACAR
     if (votoClave) {
         yaVoto = true;
         disableOptions(null); // Deshabilita todos los botones
@@ -188,7 +188,7 @@ function renderQuestion(pregunta) {
         const btnVotado = document.querySelector(`#opciones-container button[data-opcion="${votoClave}"]`);
 
         if (btnVotado) {
-            // 🔑 APLICAR EL MISMO ESTILO QUE disableOptions APLICA AL VOTAR
+            //  APLICAR EL MISMO ESTILO QUE disableOptions APLICA AL VOTAR
             btnVotado.classList.remove('btn-outline-dark');
             btnVotado.classList.add('btn-secondary');
             // Opcional: Si querés que diga VOTADO: btnVotado.textContent += " (VOTADO)";
@@ -235,7 +235,7 @@ function enviarRespuesta(opcion, btnSeleccionado) {
     disableOptions(btnSeleccionado);
     yaVoto = true;
 
-    // 🔑 1. CAMBIO: Guardar la CLAVE de la opción (A, B, C, D) en el localStorage
+    //  1. CAMBIO: Guardar la CLAVE de la opción (A, B, C, D) en el localStorage
     localStorage.setItem(`voto_q_${preguntaActual.id}`, opcion);
 
     socket.emit("respuesta", {
@@ -371,7 +371,7 @@ function iniciarCuentaRegresivaMovil(tiempoMs) {
 
 socket.on("estadoJuego", (data) => {
     // Maneja todos los cambios de estado del juego (inicio, fin de tiempo, ranking, etc.)
-    const { status, pregunta, respuestaCorrecta } = data; // 🔑 CLAVE: Desestructurar 'pregunta' y 'respuestaCorrecta'
+    const { status, pregunta, respuestaCorrecta } = data; //  CLAVE: Desestructurar 'pregunta' y 'respuestaCorrecta'
 
     console.log(`Estado del juego recibido: ${status}`);
 
@@ -400,7 +400,7 @@ socket.on("estadoJuego", (data) => {
             renderQuestion(pregunta);
             document.getElementById("main-message").textContent = `¡A Responder!`;
 
-            // 🔑 LLAMADA CLAVE: Iniciar el cronómetro
+            //  LLAMADA CLAVE: Iniciar el cronómetro
             if (data.tiempoLimiteMs) {
                 iniciarCuentaRegresivaMovil(data.tiempoLimiteMs);
             }
@@ -466,7 +466,7 @@ socket.on("disconnect", () => {
 checkLocalStorage(); // Inicia la verificación del login y la conexión (si hay datos).
 
 document.getElementById('modalIngreso').addEventListener('hidden.bs.modal', function () {
-    // 🔑 CORRECCIÓN: Si el modal se cierra y AÚN no tenemos DNI, 
+    //  CORRECCIÓN: Si el modal se cierra y AÚN no tenemos DNI, 
     // lo reabrimos (Esto solo es necesario si se permite cerrar el modal sin ingresar datos).
     // Como tiene data-bs-backdrop="static", este código es un poco redundante 
     // pero asegura la re-apertura si algo falla en el flujo normal.
