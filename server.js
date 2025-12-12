@@ -499,7 +499,7 @@ app.get('/test-db-500', async (req, res) => {
       row.fec_creac = new Date(row.fec_creac.getTime() - (6 * 60 * 60 * 1000));
       row.fec_actu = new Date(row.fec_actu.getTime() - (6 * 60 * 60 * 1000));
     });
-  
+
 
 
     //convierto los campos fec_creac y fec_actu a yyyy-mm-dd hh:mm:ss
@@ -601,7 +601,7 @@ async function getRanking(pool, limit_ = 20) {
                         CASE 
                             WHEN r.es_correcta = TRUE THEN 
                                 (2000) + 
-                                TRUNC((CAST(${TIEMPO_MAXIMO_MS} AS NUMERIC) - r.tiempo_respuesta) / 40.0) 
+                                (GREATEST(0, (CAST(${TIEMPO_MAXIMO_MS} AS NUMERIC) - r.tiempo_respuesta))) / 40.0
                             ELSE 
                                 0 
                         END
