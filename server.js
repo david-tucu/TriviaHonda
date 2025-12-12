@@ -4,7 +4,7 @@ const http = require('http');
 const cors = require('cors');
 const path = require('path');
 // Asegúrate de que tu 'pool' de PostgreSQL esté importado correctamente
-const pool = require('./db'); 
+const pool = require('./db');
 
 
 // Socket.IO
@@ -60,7 +60,7 @@ const esRespuestaCorrecta = (id, respuesta) => {
 
 
 // 🔑 NUEVO: Cliente y Clave Global de Redis
-let redisClient = null; 
+let redisClient = null;
 const REDIS_STATE_KEY = 'trivia_active_state'; // Clave fija donde guardaremos el estado
 
 // --- Redis Adapter solo en producción ---
@@ -113,11 +113,11 @@ io.on('connection', async socket => { // 🔑 CAMBIO 1: HACER LA FUNCIÓN ASÍNC
     console.error("⚠️ Error al leer estado de Redis en conexión:", error.message);
     // Fallback: Si Redis falla, usar la variable local
     if (preguntaActivaId !== null) {
-        estadoJuego = { 
-            preguntaId: preguntaActivaId,
-            timestamp: tiempoInicioPregunta,
-            status: 'aResponder' 
-        };
+      estadoJuego = {
+        preguntaId: preguntaActivaId,
+        timestamp: tiempoInicioPregunta,
+        status: 'aResponder'
+      };
     }
   }
 
@@ -145,14 +145,46 @@ io.on('connection', async socket => { // 🔑 CAMBIO 1: HACER LA FUNCIÓN ASÍNC
     console.log(`[ADMIN] Acción recibida: ${action} con payload: ${payload}`);
 
     switch (action) {
+
+      //para el RANKING
+      case 'pantallaRanking': // <-- ¡Agregar este caso faltante!
+        // 1. Emitir a la PANTALLA (pantalla.html)
+        broadcastEvent = 'mostrar_ranking_procesando';
+        broadcastPayload = {};
+        // NO enviamos nada al móvil (estadoJuego) aún.
+        break; // success sigue siendo true
+
+      //PARA MOSTRAR LOS GANADORES:
+      case 'mostrarRanking':
+        try {
+          // 🔑 1. Llama a la función de la DB para calcular el ranking
+          const rankingData = await getRanking(pool, 17);
+
+          // 1. Emitir a la PANTALLA
+          broadcastEvent = 'revelar_ranking'; // ⬅️ Evento que pantalla.html escucha para renderRanking
+          broadcastPayload = { ranking: rankingData };
+
+          // 2. Emitir al MÓVIL (estadoJuego)
+          io.emit('estadoJuego', { status: 'ganadoresMostrados' });
+
+          // Confirma la acción al administrador
+          socket.emit('actionConfirmed', { action, success: true });
+
+        } catch (error) {
+          console.error('Error al calcular/enviar ranking:', error);
+          socket.emit('error', { msg: 'Fallo al obtener el ranking.' });
+          return; // Detiene el flujo para no ejecutar el broadcast final
+        }
+        break;
+
       case 'mostrarPregunta':
-        
+
         preguntaActivaId = payload;
         const pregunta = getPreguntaPorId(preguntaActivaId);
 
         if (pregunta) {
           tiempoInicioPregunta = Date.now();
-          
+
           // 🔑 LUGAR 2: FIX ESCALABILIDAD - Guardar el estado en Redis
           await redisClient.set(REDIS_STATE_KEY, JSON.stringify({
             preguntaId: preguntaActivaId,
@@ -162,7 +194,7 @@ io.on('connection', async socket => { // 🔑 CAMBIO 1: HACER LA FUNCIÓN ASÍNC
 
 
           // 1. Emitir a la PANTALLA
-          broadcastEvent = 'mostrar_pregunta'; 
+          broadcastEvent = 'mostrar_pregunta';
           broadcastPayload = { ...getPreguntaSinRespuesta(pregunta), respuestaCorrecta: pregunta.correcta };
 
           // 2. Emitir al MÓVIL (estadoJuego)
@@ -204,8 +236,8 @@ io.on('connection', async socket => { // 🔑 CAMBIO 1: HACER LA FUNCIÓN ASÍNC
 
         socket.emit('actionConfirmed', { action, success: true });
         break;
-        
-        // ... (el resto de los casos se mantiene) ...
+
+      // ... (el resto de los casos se mantiene) ...
 
       case 'limpiarRespuestas':
         // Lógica para limpiar las respuestas (si aplica)
@@ -238,25 +270,25 @@ io.on('connection', async socket => { // 🔑 CAMBIO 1: HACER LA FUNCIÓN ASÍNC
     let preguntaActivaReal = null;
 
     try {
-        const estadoStr = await redisClient.get(REDIS_STATE_KEY);
-        if (estadoStr) {
-            const estado = JSON.parse(estadoStr);
-            if (estado.status === 'aResponder') {
-                tiempoInicioReal = estado.timestamp;
-                preguntaActivaReal = estado.preguntaId;
-            }
+      const estadoStr = await redisClient.get(REDIS_STATE_KEY);
+      if (estadoStr) {
+        const estado = JSON.parse(estadoStr);
+        if (estado.status === 'aResponder') {
+          tiempoInicioReal = estado.timestamp;
+          preguntaActivaReal = estado.preguntaId;
         }
+      }
     } catch (error) {
-        console.error("⚠️ Error al leer estado de Redis en respuesta:", error.message);
-        // Fallback (solo si Redis falla): usar las variables globales locales
-        tiempoInicioReal = tiempoInicioPregunta;
-        preguntaActivaReal = preguntaActivaId;
+      console.error("⚠️ Error al leer estado de Redis en respuesta:", error.message);
+      // Fallback (solo si Redis falla): usar las variables globales locales
+      tiempoInicioReal = tiempoInicioPregunta;
+      preguntaActivaReal = preguntaActivaId;
     }
-    
+
     // --- VALIDACIONES USANDO EL ESTADO CONSISTENTE (Redis o Fallback) ---
-    
+
     // VALIDACIÓN CRUCIAL: Asegurarse de que el tiempo de inicio existe
-    if (tiempoInicioReal === null) { 
+    if (tiempoInicioReal === null) {
       socket.emit('error', { msg: 'La pregunta aún no ha comenzado o ya finalizó.' });
       return;
     }
@@ -271,7 +303,7 @@ io.on('connection', async socket => { // 🔑 CAMBIO 1: HACER LA FUNCIÓN ASÍNC
     const latencia = Date.now() - tiempoInicioReal;
 
     // 🔑 ELIMINADO: La validación contra preguntaActivaId local que estaba aquí ya no es necesaria
-    
+
     // 1. VALIDAR SI EL DNI YA VOTÓ ESTA PREGUNTA (en memoria temporal o DB)
     // ... (Tu código de validación de voto sigue aquí) ...
 
@@ -435,7 +467,7 @@ app.get('/api/pregunta/:id', (req, res) => {
 
 // Asegúrate de que esta función está disponible en tu server.js o archivo de rutas
 async function getRanking(pool, limit_ = 17) {
-// ... (Tu código de getRanking se mantiene igual) ...
+  // ... (Tu código de getRanking se mantiene igual) ...
   const limitValue = parseInt(limit_, 10) || 17;
 
   try {
