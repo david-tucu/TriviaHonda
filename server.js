@@ -587,6 +587,62 @@ async function getRanking(pool, limit_ = 20) {
   }
 }
 
+app.get('/miDump', async (req, res) => {
+  // exporta mi base datos en texto plano (con fines de backup manual)
+  //exporta en formato .csv los datos de las tablas usuarios y respuestas
+
+  let separador = ','; // separador CSV
+  try {
+    const usuariosResult = await pool.query('SELECT * FROM usuarios ORDER BY id ASC;');
+    const respuestasResult = await pool.query('SELECT * FROM respuestas ORDER BY id ASC;');
+
+    let dumpText = '';
+    
+    // Exportar usuarios
+    dumpText += '-- Tabla: usuarios\n';
+    usuariosResult.rows.forEach(row => {
+      //cada fila en formato SVC
+      const values = [
+        row.id,
+        `'${row.dni}'`,
+        `'${row.nombre.replace(/'/g, "''")}'`, // Escapar comillas simples
+        row.borrado,
+        row.fec_creac.toISOString(),
+        row.fec_actu.toISOString()
+      ].join(separador);
+      dumpText += values + '\n';
+    });
+    
+    dumpText += '\n-- Tabla: respuestas\n';
+    respuestasResult.rows.forEach(row => {
+      const values = [
+        row.id,
+        `'${row.dni_jugador}'`,
+        row.id_pregunta,
+        `'${row.respuesta_elegida.replace(/'/g, "''")}'`, // Escapar comillas simples
+        row.es_correcta,
+        row.tiempo_respuesta,
+        row.fec_creac.toISOString(),
+        row.fec_actu.toISOString()
+      ].join(separador);
+      dumpText += values + '\n';
+    });
+
+    // Configurar headers para descarga de archivo  
+
+    res.setHeader('Content-Disposition', 'attachment; filename="miDump.csv"');
+    res.setHeader('Content-Type', 'text/csv'); // Cambiado a text/csv para mejor compatibilidad
+    res.send(dumpText);
+    res.end();
+
+
+  } catch (err) {
+    console.error('Error /miDump:', err);
+    res.status(500).json({ ok: false, error: err.message });
+  }     
+
+});
+
 // --- Archivos estáticos ---
 app.use(express.static('public'));
 
