@@ -307,7 +307,7 @@ function detenerCuentaRegresivaMovil() {
  * @param {number} tiempoMs - Tiempo límite en milisegundos.
  */
 function iniciarCuentaRegresivaMovil(tiempoMs) {
-    
+
     //si el tiempo es 0 o negativo o NaN, no hace nada
     if (!tiempoMs || tiempoMs <= 0) {
         console.warn("Tiempo inválido para la cuenta regresiva móvil:", tiempoMs);
@@ -384,10 +384,13 @@ socket.on("estadoJuego", (data) => {
     } else if (status === 'respuestaMostrada') {
         document.getElementById("voto-status").textContent = "¡Tiempo terminado! Revisando resultados...";
 
-        // 🔑 Opcional: Destacar la respuesta correcta en el móvil si la envía el servidor
+        /*
+        //Opcional: Destacar la respuesta correcta en el móvil si la envía el servidor
         if (preguntaActual && respuestaCorrecta) {
             highlightCorrectAnswer(respuestaCorrecta);
         }
+        */
+
     } else if (status === 'aResponder') {
 
         console.log("tiempo recibido: " + data.tiempoLimiteMs);
@@ -413,6 +416,16 @@ socket.on("estadoJuego", (data) => {
                 }
             }
         }
+    } else if (status === 'procesandoRanking') {
+        // desactiva el timer
+        detenerCuentaRegresivaMovil();
+        volverAportada("Procesando resultados...");
+
+        document.getElementById("voto-status").textContent = "Procesando resultados...";
+    } else if (status === 'ganadoresMostrados') {
+        // desactiva el timer
+        detenerCuentaRegresivaMovil();
+        volverAportada("¡Ranking Finalizado!");
     }
 });
 

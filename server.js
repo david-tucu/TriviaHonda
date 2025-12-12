@@ -151,7 +151,12 @@ io.on('connection', async socket => { // 🔑 CAMBIO 1: HACER LA FUNCIÓN ASÍNC
         // 1. Emitir a la PANTALLA (pantalla.html)
         broadcastEvent = 'mostrar_ranking_procesando';
         broadcastPayload = {};
-        // NO enviamos nada al móvil (estadoJuego) aún.
+       
+        // 2. Emitir al MÓVIL (estadoJuego)
+        io.emit('estadoJuego', { status: 'procesandoRanking' });
+        
+        socket.emit('actionConfirmed', { action, success: true });
+
         break; // success sigue siendo true
 
       //PARA MOSTRAR LOS GANADORES:
@@ -419,6 +424,13 @@ app.get('/admin/preguntas', (req, res) => res.json(ALL_QUESTIONS));
 
 // --- Test DB (PostgreSQL) ---
 // ... (Tu código de getRanking y Endpoints DB sigue aquí) ...
+
+//vista del ranking general
+app.get('/rank', async (req, res) => {
+  //devuelve rank.html:
+  res.sendFile(path.join(__dirname, 'public', 'rank.html'));
+});
+
 
 app.get('/test-db', async (req, res) => {
   try {

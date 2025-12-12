@@ -786,7 +786,7 @@
 
             //comleta hasta maxWinners con "nn":
             while (displayData.length < maxWinners) {
-                displayData.push({ posicion: displayData.length + 1, nombre: "", puntaje_final: "" });
+                displayData.push({ posicion: displayData.length + 1, nombre: "", dni:"", puntaje_final: "" });
             }
 
 
@@ -801,12 +801,21 @@
 
             // 2. Iterar y mostrar cada ganador con retraso
             displayData.forEach((item, index) => {
+
+                if ( item.dni ) {
+                    //puntos suspensivos y los ultimos 3 digitos del dni
+                    item.dni_mask = item.dni.slice(-3);
+                } else {
+                    item.dni_mask = "###";
+                }
+                
                 const li = document.createElement('li');
                 li.className = 'rank-item'; // Inicialmente oculto por el CSS
 
                 const liContent = `
                     <span class="rank-pos">${item.posicion}.</span> 
-                    <span class="rank-name">${item.nombre}</span> 
+                    <span class="rank-name">${item.nombre} (${item.dni_mask})</span> 
+                    <span class="rank-dni"></span> 
                     <span class="rank-score">${item.puntaje_final}</span>
                 `;
                 li.innerHTML = liContent;
