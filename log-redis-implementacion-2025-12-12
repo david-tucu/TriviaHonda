@@ -1,0 +1,16 @@
+2025-12-12T21:14:32.237139785Z 1:M 12 Dec 2025 21:14:32.236 * 100 changes in 300 seconds. Saving...
+2025-12-12T21:14:32.237398532Z 1:M 12 Dec 2025 21:14:32.237 * Background saving started by pid 24
+2025-12-12T21:14:32.245156243Z 24:C 12 Dec 2025 21:14:32.244 * DB saved on disk
+2025-12-12T21:14:32.245289646Z 24:C 12 Dec 2025 21:14:32.245 * Fork CoW for RDB: current 0 MB, peak 0 MB, average 0 MB
+2025-12-12T21:14:32.340652464Z 1:M 12 Dec 2025 21:14:32.338 * Background saving terminated with success
+2025-12-12T21:19:33.019997759Z 1:M 12 Dec 2025 21:19:33.019 * 100 changes in 300 seconds. Saving...
+2025-12-12T21:19:33.020372119Z 1:M 12 Dec 2025 21:19:33.020 * Background saving started by pid 25
+2025-12-12T21:19:33.026224908Z 25:C 12 Dec 2025 21:19:33.026 * DB saved on disk
+2025-12-12T21:19:33.026592138Z 25:C 12 Dec 2025 21:19:33.026 * Fork CoW for RDB: current 0 MB, peak 0 MB, average 0 MB
+2025-12-12T21:19:33.121674279Z 1:M 12 Dec 2025 21:19:33.121 * Background saving terminated with success
+2025-12-12T22:06:48.298753032Z 1:signal-handler (1765577208) Received SIGTERM scheduling shutdown...
+2025-12-12T22:06:48.360084574Z 1:M 12 Dec 2025 22:06:48.359 * User requested shutdown...
+2025-12-12T22:06:48.360101335Z 1:M 12 Dec 2025 22:06:48.360 * Calling fsync() on the AOF file.
+2025-12-12T22:06:48.360106825Z 1:M 12 Dec 2025 22:06:48.360 * Saving the final RDB snapshot before exiting.
+2025-12-12T22:06:48.365326746Z 1:M 12 Dec 2025 22:06:48.365 * DB saved on disk
+2025-12-12T22:06:48.366137678Z 1:M 12 Dec 2025 22:06:48.366 # Valkey is now ready to exit, bye bye...

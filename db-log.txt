@@ -1,0 +1,50 @@
+2025-12-12T22:14:37.766722973Z [693c93cd.1eaf0-2] user=postgres,db=trivia_db_pwpi,app=[unknown],client=10.17.130.161,LOG:  connection authenticated: identity="postgres" method=md5 (/pgdata/dpg-d4rnuph5pdvs73bn6bo0-a/pg_hba.conf:88)
+2025-12-12T22:14:37.766737254Z [693c93cd.1eaf0-3] user=postgres,db=trivia_db_pwpi,app=[unknown],client=10.17.130.161,LOG:  connection authorized: user=postgres database=trivia_db_pwpi SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-12-12T22:14:38.186641491Z [693c93ce.1eaf1-1] user=[unknown],db=[unknown],app=[unknown],client=10.17.130.161,LOG:  connection received: host=10.17.130.161 port=57526
+2025-12-12T22:14:40.769212907Z [693c93cd.1eaf0-4] user=postgres,db=trivia_db_pwpi,app=[unknown],client=10.17.130.161,LOG:  disconnection: session time: 0:00:03.006 user=postgres database=trivia_db_pwpi host=10.17.130.161 port=56908
+2025-12-12T22:14:46.492831206Z [693c93d6.1eb01-1] user=[unknown],db=[unknown],app=[unknown],client=[local],LOG:  connection received: host=[local]
+2025-12-12T22:14:47.100432117Z [693c93d7.1eb08-1] user=[unknown],db=[unknown],app=[unknown],client=[local],LOG:  connection received: host=[local]
+2025-12-12T22:14:47.101083452Z [693c93d7.1eb08-2] user=postgres,db=trivia_db_pwpi,app=[unknown],client=[local],LOG:  connection authenticated: user="postgres" method=trust (/pgdata/dpg-d4rnuph5pdvs73bn6bo0-a/pg_hba.conf:84)
+2025-12-12T22:14:47.101099293Z [693c93d7.1eb08-3] user=postgres,db=trivia_db_pwpi,app=[unknown],client=[local],LOG:  connection authorized: user=postgres database=trivia_db_pwpi application_name=psql
+2025-12-12T22:14:47.106104879Z [693c93d7.1eb08-4] user=postgres,db=trivia_db_pwpi,app=psql,client=[local],LOG:  disconnection: session time: 0:00:00.006 user=postgres database=trivia_db_pwpi host=[local]
+2025-12-12T22:14:47.718781561Z [693c93d7.1eb0f-1] user=[unknown],db=[unknown],app=[unknown],client=[local],LOG:  connection received: host=[local]
+2025-12-12T22:14:47.719527953Z [693c93d7.1eb0f-2] user=postgres,db=trivia_db_pwpi,app=[unknown],client=[local],LOG:  connection authenticated: user="postgres" method=trust (/pgdata/dpg-d4rnuph5pdvs73bn6bo0-a/pg_hba.conf:84)
+2025-12-12T22:14:47.719539873Z [693c93d7.1eb0f-3] user=postgres,db=trivia_db_pwpi,app=[unknown],client=[local],LOG:  connection authorized: user=postgres database=trivia_db_pwpi application_name=psql
+2025-12-12T22:14:47.724155193Z [693c93d7.1eb0f-4] user=postgres,db=trivia_db_pwpi,app=psql,client=[local],LOG:  disconnection: session time: 0:00:00.005 user=postgres database=trivia_db_pwpi host=[local]
+2025-12-12T22:14:57.706050811Z [693c93e1.1eb1f-1] user=[unknown],db=[unknown],app=[unknown],client=[local],LOG:  connection received: host=[local]
+2025-12-12T22:14:58.337859517Z [693c93e2.1eb26-1] user=[unknown],db=[unknown],app=[unknown],client=[local],LOG:  connection received: host=[local]
+2025-12-12T22:14:58.338646691Z [693c93e2.1eb26-2] user=postgres,db=trivia_db_pwpi,app=[unknown],client=[local],LOG:  connection authenticated: user="postgres" method=trust (/pgdata/dpg-d4rnuph5pdvs73bn6bo0-a/pg_hba.conf:84)
+2025-12-12T22:14:58.338656312Z [693c93e2.1eb26-3] user=postgres,db=trivia_db_pwpi,app=[unknown],client=[local],LOG:  connection authorized: user=postgres database=trivia_db_pwpi application_name=psql
+2025-12-12T22:14:58.343235699Z [693c93e2.1eb26-4] user=postgres,db=trivia_db_pwpi,app=psql,client=[local],LOG:  disconnection: session time: 0:00:00.005 user=postgres database=trivia_db_pwpi host=[local]
+2025-12-12T22:14:58.949182834Z [693c93e2.1eb2d-1] user=[unknown],db=[unknown],app=[unknown],client=[local],LOG:  connection received: host=[local]
+2025-12-12T22:14:58.950001881Z [693c93e2.1eb2d-2] user=postgres,db=trivia_db_pwpi,app=[unknown],client=[local],LOG:  connection authenticated: user="postgres" method=trust (/pgdata/dpg-d4rnuph5pdvs73bn6bo0-a/pg_hba.conf:84)
+2025-12-12T22:14:58.950013902Z [693c93e2.1eb2d-3] user=postgres,db=trivia_db_pwpi,app=[unknown],client=[local],LOG:  connection authorized: user=postgres database=trivia_db_pwpi application_name=psql
+2025-12-12T22:14:58.954365963Z [693c93e2.1eb2d-4] user=postgres,db=trivia_db_pwpi,app=psql,client=[local],LOG:  disconnection: session time: 0:00:00.005 user=postgres database=trivia_db_pwpi host=[local]
+2025-12-12T22:15:02.501908664Z [693c93e6.1eb35-1] user=[unknown],db=[unknown],app=[unknown],client=[local],LOG:  connection received: host=[local]
+2025-12-12T22:15:02.502672167Z [693c93e6.1eb35-2] user=postgres,db=trivia_db_pwpi,app=[unknown],client=[local],LOG:  connection authenticated: user="postgres" method=trust (/pgdata/dpg-d4rnuph5pdvs73bn6bo0-a/pg_hba.conf:84)
+2025-12-12T22:15:02.502688048Z [693c93e6.1eb35-3] user=postgres,db=trivia_db_pwpi,app=[unknown],client=[local],LOG:  connection authorized: user=postgres database=trivia_db_pwpi application_name=psql
+2025-12-12T22:15:02.507383163Z [693c93e6.1eb35-4] user=postgres,db=trivia_db_pwpi,app=psql,client=[local],LOG:  disconnection: session time: 0:00:00.005 user=postgres database=trivia_db_pwpi host=[local]
+2025-12-12T22:15:07.321727364Z [693c93eb.1eb45-1] user=[unknown],db=[unknown],app=[unknown],client=[local],LOG:  connection received: host=[local]
+2025-12-12T22:15:07.32252722Z [693c93eb.1eb45-2] user=postgres,db=trivia_db_pwpi,app=[unknown],client=[local],LOG:  connection authenticated: user="postgres" method=trust (/pgdata/dpg-d4rnuph5pdvs73bn6bo0-a/pg_hba.conf:84)
+2025-12-12T22:15:07.322541851Z [693c93eb.1eb45-3] user=postgres,db=trivia_db_pwpi,app=[unknown],client=[local],LOG:  connection authorized: user=postgres database=trivia_db_pwpi application_name=psql
+2025-12-12T22:15:07.325191994Z [693c93eb.1eb45-4] user=postgres,db=trivia_db_pwpi,app=psql,client=[local],LOG:  disconnection: session time: 0:00:00.003 user=postgres database=trivia_db_pwpi host=[local]
+2025-12-12T22:15:07.956252298Z [693c93eb.1eb4c-1] user=[unknown],db=[unknown],app=[unknown],client=[local],LOG:  connection received: host=[local]
+2025-12-12T22:15:07.957018081Z [693c93eb.1eb4c-2] user=postgres,db=trivia_db_pwpi,app=[unknown],client=[local],LOG:  connection authenticated: user="postgres" method=trust (/pgdata/dpg-d4rnuph5pdvs73bn6bo0-a/pg_hba.conf:84)
+2025-12-12T22:15:07.957026871Z [693c93eb.1eb4c-3] user=postgres,db=trivia_db_pwpi,app=[unknown],client=[local],LOG:  connection authorized: user=postgres database=trivia_db_pwpi application_name=psql
+2025-12-12T22:15:07.995408198Z [693c93eb.1eb4c-4] user=postgres,db=trivia_db_pwpi,app=psql,client=[local],LOG:  disconnection: session time: 0:00:00.039 user=postgres database=trivia_db_pwpi host=[local]
+2025-12-12T22:15:08.607604396Z [693c93ec.1eb53-1] user=[unknown],db=[unknown],app=[unknown],client=[local],LOG:  connection received: host=[local]
+2025-12-12T22:15:08.608347767Z [693c93ec.1eb53-2] user=postgres,db=trivia_db_pwpi,app=[unknown],client=[local],LOG:  connection authenticated: user="postgres" method=trust (/pgdata/dpg-d4rnuph5pdvs73bn6bo0-a/pg_hba.conf:84)
+2025-12-12T22:15:08.608357868Z [693c93ec.1eb53-3] user=postgres,db=trivia_db_pwpi,app=[unknown],client=[local],LOG:  connection authorized: user=postgres database=trivia_db_pwpi application_name=psql
+2025-12-12T22:15:08.614655684Z [693c93ec.1eb53-4] user=postgres,db=trivia_db_pwpi,app=psql,client=[local],LOG:  disconnection: session time: 0:00:00.007 user=postgres database=trivia_db_pwpi host=[local]
+2025-12-12T22:15:32.785975006Z [693c9404.1eb66-1] user=,db=,app=,client=,LOG:  automatic analyze of table "trivia_db_pwpi.pg_catalog.pg_attribute"
+2025-12-12T22:15:32.785994878Z 	avg read rate: 0.460 MB/s, avg write rate: 5.974 MB/s
+2025-12-12T22:15:32.786000758Z 	buffer usage: 1069 hits, 1 reads, 13 dirtied
+2025-12-12T22:15:32.786006499Z 	WAL usage: 82 records, 11 full page images, 80216 bytes, 0 buffers full
+2025-12-12T22:15:32.786011489Z 	system usage: CPU: user: 0.00 s, system: 0.00 s, elapsed: 0.01 s
+2025-12-12T22:15:37.563220103Z [693c9409.1eb70-1] user=[unknown],db=[unknown],app=[unknown],client=10.17.130.161,LOG:  connection received: host=10.17.130.161 port=46932
+2025-12-12T22:15:37.563948703Z [693c9409.1eb71-1] user=[unknown],db=[unknown],app=[unknown],client=10.17.130.161,LOG:  connection received: host=10.17.130.161 port=46936
+2025-12-12T22:15:37.572464632Z [693c9409.1eb72-1] user=[unknown],db=[unknown],app=[unknown],client=10.17.130.161,LOG:  connection received: host=10.17.130.161 port=46938
+2025-12-12T22:15:37.575668434Z [693c9409.1eb72-2] user=postgres,db=trivia_db_pwpi,app=[unknown],client=10.17.130.161,LOG:  connection authenticated: identity="postgres" method=md5 (/pgdata/dpg-d4rnuph5pdvs73bn6bo0-a/pg_hba.conf:88)
+2025-12-12T22:15:37.575686976Z [693c9409.1eb72-3] user=postgres,db=trivia_db_pwpi,app=[unknown],client=10.17.130.161,LOG:  connection authorized: user=postgres database=trivia_db_pwpi SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-12-12T22:15:38.185346237Z [693c940a.1eb73-1] user=[unknown],db=[unknown],app=[unknown],client=10.17.130.161,LOG:  connection received: host=10.17.130.161 port=51098
+2025-12-12T22:15:40.664436092Z [693c9409.1eb72-4] user=postgres,db=trivia_db_pwpi,app=[unknown],client=10.17.130.161,LOG:  disconnection: session time: 0:00:03.092 user=postgres database=trivia_db_pwpi host=10.17.130.161 port=46938

@@ -269,7 +269,8 @@ socket.on("connect", () => {
     // Si ya estamos logueados (DNI existe), establecemos la UI de espera.
     // Esto corrige que se quede en "Esperando conexión..." si el DNI estaba guardado.
     if (userData.dni) {
-        document.getElementById("main-message").textContent = "ESPERANDO QUE INICIE LA TRIVIA...";
+        //document.getElementById("main-message").textContent = "ESPERANDO QUE INICIE LA TRIVIA...";
+        document.getElementById("main-message").textContent = "LA TRIVIA YA FINALIZÓ";
         document.getElementById("spinner").classList.remove('d-none');
     }
 });
