@@ -491,8 +491,24 @@ app.get('/test-db-500', async (req, res) => {
     const result = await pool.query(
       //'SELECT id, dni_jugador, id_pregunta, respuesta_elegida, es_correcta, tiempo_respuesta FROM respuestas ORDER BY id DESC LIMIT 500'
       //agregar a mi consulta fec_actu y ordenar por fec_actu
-      'SELECT id, dni_jugador, id_pregunta, respuesta_elegida, es_correcta, tiempo_respuesta, fec_actu FROM respuestas ORDER BY fec_actu DESC LIMIT 500'
+      'SELECT id, dni_jugador, id_pregunta, respuesta_elegida, es_correcta, tiempo_respuesta, fec_creac, fec_actu FROM respuestas ORDER BY fec_actu DESC LIMIT 500'
     );
+
+    //corrijo la diferencia horaria a buenos aires (UTC-3):
+    result.rows.forEach(row => {
+      row.fec_creac = new Date(row.fec_creac.getTime() - (6 * 60 * 60 * 1000));
+      row.fec_actu = new Date(row.fec_actu.getTime() - (6 * 60 * 60 * 1000));
+    });
+  
+
+
+    //convierto los campos fec_creac y fec_actu a yyyy-mm-dd hh:mm:ss
+    result.rows = result.rows.map(row => ({
+      ...row,
+      fec_creac: row.fec_creac.toISOString().replace('T', ' ').substring(0, 19),
+      fec_actu: row.fec_actu.toISOString().replace('T', ' ').substring(0, 19),
+    }));
+
     res.json({ ok: true, data: result.rows });
   } catch (err) {
     console.error("Error en /test-db-500:", err);
