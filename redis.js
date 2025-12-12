@@ -31,10 +31,24 @@ if (process.env.NODE_ENV === 'production') {
             delete mockStore[key]; // Simula la eliminación
             return 1;
         },
+
+        // ⭐️ NUEVO: Implementación de INCR para el mock
+        async incr(key) {
+            // Obtiene el valor actual o 0, lo convierte a número y lo incrementa
+            let value = parseInt(mockStore[key] || 0, 10);
+            value++;
+            // Guarda el nuevo valor (como string, imitando a Redis)
+            mockStore[key] = value.toString();
+            return value;
+        },
+
+        
         //  NUEVO: Función para ver el store (útil para debugging)
         async debugStore() {
             return mockStore;
         }
+
+        
     };
 }
 

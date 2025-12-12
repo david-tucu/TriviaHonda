@@ -131,6 +131,8 @@ io.on('connection', async socket => { //  CAMBIO 1: HACER LA FUNCIÓN ASÍNCRONA
     }
   }
 
+  // ⭐️ NUEVO: Emitir el estado inicial de conectados y votos
+  await emitCurrentStatusToAdmin(preguntaActivaId);
 
   socket.on('adminAction', async (data) => { //  CAMBIO 2: HACER LA FUNCIÓN ASÍNCRONA
 
@@ -151,10 +153,10 @@ io.on('connection', async socket => { //  CAMBIO 1: HACER LA FUNCIÓN ASÍNCRONA
         // 1. Emitir a la PANTALLA (pantalla.html)
         broadcastEvent = 'mostrar_ranking_procesando';
         broadcastPayload = {};
-       
+
         // 2. Emitir al MÓVIL (estadoJuego)
         io.emit('estadoJuego', { status: 'procesandoRanking' });
-        
+
         socket.emit('actionConfirmed', { action, success: true });
 
         break; // success sigue siendo true
@@ -205,6 +207,10 @@ io.on('connection', async socket => { //  CAMBIO 1: HACER LA FUNCIÓN ASÍNCRONA
             tiempoLimiteMs: tiempoMs,
           }), { EX: 3600 }); // Expira en 1 hora por seguridad
 
+          // ⭐️ NUEVO: Reiniciar el contador de votos para la nueva pregunta en Redis
+          const votesKey = `trivia_votes:Q${preguntaActivaId}`;
+          // Establecer a 0 y con una expiración de 1 hora.
+          await redisClient.set(votesKey, 0, { EX: 3600 });
 
           // 1. Emitir a la PANTALLA
           broadcastEvent = 'mostrar_pregunta';
@@ -222,6 +228,10 @@ io.on('connection', async socket => { //  CAMBIO 1: HACER LA FUNCIÓN ASÍNCRONA
           });
 
           socket.emit('actionConfirmed', { action, success: true });
+
+          // ⭐️ NUEVO: Emitir el estado inicial de votos (0) y conectados
+          await emitCurrentStatusToAdmin(preguntaActivaId);
+
         } else {
           console.error(`Error: Pregunta con ID ${preguntaActivaId} no encontrada.`);
           socket.emit('error', { msg: 'Pregunta no encontrada.' });
@@ -248,6 +258,10 @@ io.on('connection', async socket => { //  CAMBIO 1: HACER LA FUNCIÓN ASÍNCRONA
         //  LUGAR 3: FIX ESCALABILIDAD - BORRAR DE REDIS
         await redisClient.del(REDIS_STATE_KEY);
 
+        // ⭐️ NUEVO: Limpiar el contador de votos de la pregunta anterior
+        const prevVotesKey = `trivia_votes:Q${payload}`; // Asumimos que payload podría ser el ID anterior
+        await redisClient.del(prevVotesKey);
+
         // 1. Emitir a la PANTALLA
         broadcastEvent = 'ir_a_inicio';
         broadcastPayload = {};
@@ -256,6 +270,10 @@ io.on('connection', async socket => { //  CAMBIO 1: HACER LA FUNCIÓN ASÍNCRONA
         io.emit('estadoJuego', { status: 'inicio' });
 
         socket.emit('actionConfirmed', { action, success: true });
+
+        // ⭐️ NUEVO: Emitir el estado (votos 0, conectados X)
+        await emitCurrentStatusToAdmin(null);
+
         break;
 
       // ... (el resto de los casos se mantiene) ...
@@ -375,6 +393,21 @@ io.on('connection', async socket => { //  CAMBIO 1: HACER LA FUNCIÓN ASÍNCRONA
       // 5. RESPUESTA AL CLIENTE
       socket.emit('respuestaOk');
 
+      // ⭐️ NUEVO: ACTUALIZAR CONTADOR DE VOTOS EN TIEMPO REAL (usando Redis)
+      try {
+        const votesKey = `trivia_votes:Q${id_pregunta}`;
+
+        // 1. Usar INCR para incrementar el contador atómicamente.
+        // No necesitamos el valor de retorno, solo la acción.
+        await redisClient.incr(votesKey);
+
+        // 2. Re-emitir el estado actualizado. Esto notificará a la pantalla de administración
+        await emitCurrentStatusToAdmin(id_pregunta);
+
+      } catch (err) {
+        console.error('⚠️ Error al incrementar el contador de votos en Redis:', err);
+      }
+
     } catch (err) {
       // Ya no debería haber errores 23505 (duplicado), solo errores graves
       console.error('Error al guardar/actualizar respuesta en DB:', err);
@@ -398,6 +431,11 @@ io.on('connection', async socket => { //  CAMBIO 1: HACER LA FUNCIÓN ASÍNCRONA
 
   socket.on('disconnect', () => {
     console.log('Cliente desconectado:', socket.id);
+
+    // ⭐️ NUEVO: Emitir el nuevo conteo de conectados al desconectar
+    // Nota: El 'disconnect' se dispara *después* de que el cliente ha sido removido del conteo.
+    emitCurrentStatusToAdmin(preguntaActivaId);
+
   });
 });
 
@@ -597,7 +635,7 @@ app.get('/miDump', async (req, res) => {
     const respuestasResult = await pool.query('SELECT * FROM respuestas ORDER BY id ASC;');
 
     let dumpText = '';
-    
+
     // Exportar usuarios
     dumpText += '-- Tabla: usuarios\n';
     usuariosResult.rows.forEach(row => {
@@ -612,7 +650,7 @@ app.get('/miDump', async (req, res) => {
       ].join(separador);
       dumpText += values + '\n';
     });
-    
+
     dumpText += '\n-- Tabla: respuestas\n';
     respuestasResult.rows.forEach(row => {
       const values = [
@@ -639,9 +677,37 @@ app.get('/miDump', async (req, res) => {
   } catch (err) {
     console.error('Error /miDump:', err);
     res.status(500).json({ ok: false, error: err.message });
-  }     
+  }
 
 });
+
+
+// --- NUEVA FUNCIÓN DE UTILIDAD: EMITIR EL ESTADO EN TIEMPO REAL ---
+/** Emite el estado actual (conectados y votos) al canal del administrador. */
+const emitCurrentStatusToAdmin = async (preguntaId) => {
+  // 1. Contar Conectados (io.engine.clientsCount cuenta todos los sockets conectados)
+  const connectedClients = io.engine.clientsCount;
+
+  // 2. Obtener Votos (solo si hay pregunta activa)
+  let totalVotes = 0;
+  if (preguntaId) {
+    try {
+      // Usamos GET para obtener el total de votos de la clave Redis de la pregunta
+      const votesKey = `trivia_votes:Q${preguntaId}`;
+      const votes = await redisClient.get(votesKey);
+      totalVotes = parseInt(votes || 0, 10);
+    } catch (error) {
+      console.error("⚠️ Error al leer votos de Redis:", error.message);
+      // Si Redis falla, mantiene el contador en 0
+    }
+  }
+
+  // 3. Emitir el nuevo estado de forma global (todos los que escuchen 'statusUpdate' lo recibirán)
+  io.emit('statusUpdate', {
+    connectedClients: connectedClients,
+    totalVotes: totalVotes,
+  });
+};
 
 // --- Archivos estáticos ---
 app.use(express.static('public'));

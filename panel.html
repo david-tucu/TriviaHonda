@@ -16,7 +16,7 @@
 <body>
 
   <div class="container">
-    <h1 class="mb-2 text-center">Admin Trivia Honda</h1>
+    <h1 class="mb-2 text-center">PANEL TRIVIA HONDA</h1>
 
     <div id="status-message" class="alert alert-info d-flex align-center align-items-center" role="alert">
       <div id="spinner" class="spinner-border spinner-border-sm me-2 d-none" role="status"></div>
@@ -28,19 +28,35 @@
 
     <div class="row">
       <div class="col-12 mb-2">
-        <h3 class="mb-1 text-center">Tiempo para responder</h3>
-        <div class="row mb-4 justify-content-center">
-          <div class="col-md-6 col-lg-4">
-            <select id="selectTiempo" class="form-select form-select-lg">
-              <option value="10000">10 segundos</option>
-              <option value="15000" selected>15 segundos</option>
-              <option value="20000">20 segundos</option>
-              <option value="25000">25 segundos</option>
-            </select>
+
+        <div class="row mb-1 justify-content-center">
+          <div class="col col-6">
+            <div id="status-info">
+              <h3 class="mb-1 text-center">DISPOSITIVOS</h3>
+
+              <p class="text-center">CONECTADOS: <span id="count-conectados"></span><br>
+                RESPONDIERON: <span id="count-votos"></span></p>
+            </div>
+          </div>
+          <div class="col col-6">
+            <h3 class="mb-1 text-center">TIMER</h3>
+            <div class="row mb-4 justify-content-center">
+              <div class="col-md-6 col-lg-4">
+                <select id="selectTiempo" class="form-select form-select-lg">
+                  <option value="10000">10 segundos</option>
+                  <option value="15000" selected>15 segundos</option>
+                  <option value="20000">20 segundos</option>
+                  <option value="25000">25 segundos</option>
+                </select>
+              </div>
+            </div>
+
+
           </div>
         </div>
 
-        <h3 class="mb-1 text-center">Control de Preguntas</h3>
+
+        <h3 class="mb-1 text-center">CONTROL PREGUNTAS</h3>
         <div id="question-controls">
         </div>
       </div>
@@ -48,7 +64,7 @@
       <div class="col-12 mb-2">
 
 
-        <h3 class="mb-1 text-center">Pantalla Ranking</h3>
+        <h3 class="mb-1 text-center">PANTALLA RANKING</h3>
 
         <div class="row">
           <div class="col-6">
@@ -74,7 +90,7 @@
       </div>
     </div>
 
-    <h3 class="mt-2 text-center">Logs del Servidor</h3>
+    <h3 class="mt-2 text-center">LOGS</h3>
     <div id="log-area" class="border"></div>
   </div>
 
@@ -134,7 +150,7 @@
         btnQ.textContent = `PREGUNTA ${i}`;
         // d-grid hace que el botón ocupe todo el ancho de la columna
         btnQ.className = 'btn btn-primary d-grid btn-action w-100';
-        
+
         btnQ.onclick = () => {
           //  CAMBIO CLAVE: Capturar el valor del select ANTES de enviar
           const tiempoSeleccionado = parseInt(selectTiempo.value); // Valor en MS
@@ -237,10 +253,44 @@
       }
     });
 
+    // En panel.html:
+    socket.on('statusUpdate', (status) => {
+      let conectados = status.connectedClients;
+      const votos = status.totalVotes;
+
+
+
+
+      //limitar que noectados no sea negativo
+      if (conectados > 0) {
+        conectados--; //le resto 1 (por el panel)
+      }
+      if (conectados <= 0) {
+        conectados = 0;
+      }
+      //limitar votos entre 0 y conectados:
+      if (votos < 0) {
+        votos = 0;
+      }
+      if (votos > conectados) {
+        votos = conectados;
+      }
+
+
+
+      //console.log(`Clientes conectados: ${conectados}`);
+      //console.log(`Votos recibidos para esta pregunta: ${votos}`);
+
+      // Aquí actualiza el DOM de su panel con estos valores
+      document.getElementById('count-conectados').textContent = conectados;
+      document.getElementById('count-votos').textContent = votos;
+    });
+
     // El cliente se desconectó
     socket.on('disconnect', () => {
       updateStatus("Desconectado. Intentando reconectar...", true, 'warning');
     });
+
 
     // Inicializar los botones
     createQuestionButtons();
