@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="css/styles-admin.css">
 
 
-<style>
+  <style>
   </style>
 </head>
 
@@ -23,8 +23,23 @@
       <div id="message-text">Conectando con el servidor...</div>
     </div>
 
+
+
+
     <div class="row">
       <div class="col-12 mb-2">
+        <h3 class="mb-1 text-center">Tiempo para responder</h3>
+        <div class="row mb-4 justify-content-center">
+          <div class="col-md-6 col-lg-4">
+            <select id="selectTiempo" class="form-select form-select-lg">
+              <option value="10000">10 segundos</option>
+              <option value="15000" selected>15 segundos</option>
+              <option value="20000">20 segundos</option>
+              <option value="25000">25 segundos</option>
+            </select>
+          </div>
+        </div>
+
         <h3 class="mb-1 text-center">Control de Preguntas</h3>
         <div id="question-controls">
         </div>
@@ -103,6 +118,9 @@
       // Obtenemos el contenedor donde se añadirán las filas de botones
       const questionControls = document.getElementById('question-controls');
 
+      const selectTiempo = document.getElementById('selectTiempo');
+
+
       for (let i = 1; i <= NUM_PREGUNTAS; i++) {
         // 1. Crear la fila (div.row) para contener ambos botones
         const row = document.createElement('div');
@@ -116,7 +134,18 @@
         btnQ.textContent = `PREGUNTA ${i}`;
         // d-grid hace que el botón ocupe todo el ancho de la columna
         btnQ.className = 'btn btn-primary d-grid btn-action w-100';
-        btnQ.onclick = () => enviarAccion('mostrarPregunta', i, `Pregunta ${i} enviada.`);
+        
+        btnQ.onclick = () => {
+          // 🔑 CAMBIO CLAVE: Capturar el valor del select ANTES de enviar
+          const tiempoSeleccionado = parseInt(selectTiempo.value); // Valor en MS
+
+          const payload = {
+            preguntaId: i, // ID de la pregunta
+            tiempoMs: tiempoSeleccionado // Nuevo valor de tiempo
+          };
+
+          enviarAccion('mostrarPregunta', payload, `Pregunta ${i} enviada con ${tiempoSeleccionado / 1000}s.`);
+        };
 
         colQ.appendChild(btnQ);
         row.appendChild(colQ);
@@ -166,7 +195,7 @@
     function enviarAccion(eventName, data = null, successMessage = "Acción enviada...") {
       updateStatus(successMessage, true);
 
-      console.log( "enviando accion: ", eventName, data);
+      console.log("enviando accion: ", eventName, data);
 
       const payload = {
         action: eventName,

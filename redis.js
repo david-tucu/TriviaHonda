@@ -1,4 +1,5 @@
 let client;
+let mockStore = {};
 
 if (process.env.NODE_ENV === 'production') {
     // --- Producción: Redis real ---
@@ -17,15 +18,22 @@ if (process.env.NODE_ENV === 'production') {
     console.log("Redis desactivado en desarrollo (usando mock)");
 
     client = {
+        // 🔑 MODIFICADO: Devuelve el valor del mockStore
         async get(key) {
-            return null;
+            return mockStore[key] || null;
         },
-        async set(key, value) {
-            // simulamos respuesta de Redis
+        // 🔑 MODIFICADO: Guarda el valor en el mockStore (ignorando TTL por simplicidad)
+        async set(key, value, options) {
+            mockStore[key] = value;
             return "OK";
         },
         async del(key) {
+            delete mockStore[key]; // Simula la eliminación
             return 1;
+        },
+        // 🔑 NUEVO: Función para ver el store (útil para debugging)
+        async debugStore() {
+            return mockStore;
         }
     };
 }

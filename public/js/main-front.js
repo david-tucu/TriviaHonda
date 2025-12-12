@@ -268,8 +268,103 @@ socket.on("preguntaActiva", (data) => {
 
     // Al recibir la pregunta, renderizamos el HTML para que el usuario pueda votar.
     renderQuestion(data);
+    // data ahora tiene data.tiempoLimiteMs
+    iniciarCuentaRegresivaMovil(data.tiempoLimiteMs); // ⬅️ Asume que implementarás esta función
 
 });
+
+/* para el timer */
+let countdownIntervalMovil = null;
+const timerContainerMovil = document.getElementById('countdown-timer-mobile');
+const timerDisplayMovil = document.getElementById('timer-display-mobile');
+
+/**
+ * Detiene cualquier intervalo de cuenta regresiva activo y oculta el contenedor.
+ */
+function detenerCuentaRegresivaMovil() {
+    //vuelve a mostrar el status:
+    const cajaMensaje = document.getElementById("main-message");
+    if (cajaMensaje) {
+        cajaMensaje.classList.remove("d-none");
+        cajaMensaje.textContent = "Esperando próxima pregunta...";
+    }
+
+
+
+    if (countdownIntervalMovil) {
+        clearInterval(countdownIntervalMovil);
+        countdownIntervalMovil = null;
+    }
+    // Ocultar el timer y remover la clase de animación
+    if (timerContainerMovil) {
+        timerContainerMovil.classList.add('d-none');
+        document.body.classList.remove('timer-active-mobile');
+    }
+}
+
+/**
+ * Inicia la cuenta regresiva visible en la interfaz del móvil.
+ * @param {number} tiempoMs - Tiempo límite en milisegundos.
+ */
+function iniciarCuentaRegresivaMovil(tiempoMs) {
+    
+    //si el tiempo es 0 o negativo o NaN, no hace nada
+    if (!tiempoMs || tiempoMs <= 0) {
+        console.warn("Tiempo inválido para la cuenta regresiva móvil:", tiempoMs);
+        return;
+    }
+
+    console.log("intenta iniciar cuenta regresiva");
+
+    // 1. Detener cualquier timer anterior
+    detenerCuentaRegresivaMovil();
+
+    //quita el status de texto:
+    document.getElementById("main-message").classList.add("d-none");
+
+
+    // 2. Verificar que el elemento exista (seguridad)
+    if (!timerContainerMovil || !timerDisplayMovil) {
+        console.warn("Elemento del cronómetro no encontrado en el móvil. No se iniciará la cuenta regresiva.");
+        return;
+    }
+
+    // 3. Mostrar el timer y activar las animaciones
+    timerContainerMovil.classList.remove('d-none');
+    document.body.classList.add('timer-active-mobile');
+
+    // 4. Inicializar el tiempo en segundos
+    let segundosRestantes = Math.floor(tiempoMs / 1000);
+    timerDisplayMovil.textContent = segundosRestantes;
+
+    // 5. Iniciar el intervalo de 1 segundo
+    countdownIntervalMovil = setInterval(() => {
+        segundosRestantes--;
+
+        if (segundosRestantes >= 0) {
+            timerDisplayMovil.textContent = segundosRestantes;
+        }
+
+        //si falta 5 segundos o menos, cambia a fast:
+        if (segundosRestantes <= 5) {
+            timerContainerMovil.classList.add('fast');
+        } else {
+            timerContainerMovil.classList.remove('fast');
+        }
+
+
+        // 6. Condición de finalización
+        if (segundosRestantes <= 0) {
+            detenerCuentaRegresivaMovil();
+            // 💡 Aquí puedes agregar lógica para deshabilitar botones si el tiempo acabó
+            document.getElementById('voto-status').textContent = "¡Tiempo de respuesta agotado!";
+            // La lógica para deshabilitar los botones debería ir aquí.
+            const opciones = document.querySelectorAll('#opciones-container button');
+            opciones.forEach(btn => btn.disabled = true);
+        }
+
+    }, 1000); // 1000 ms = 1 segundo
+}
 
 
 // --- HANDLERS DE SOCKET.IO ---
@@ -294,18 +389,28 @@ socket.on("estadoJuego", (data) => {
             highlightCorrectAnswer(respuestaCorrecta);
         }
     } else if (status === 'aResponder') {
-        // 🔑 FIX CLAVE: Si la pregunta viene en el payload y no la tenemos, la renderizamos
+
+        console.log("tiempo recibido: " + data.tiempoLimiteMs);
+        //Si la pregunta viene en el payload y no la tenemos, la renderizamos
         if (pregunta && pregunta.id !== (preguntaActual ? preguntaActual.id : null)) {
             // Es una pregunta nueva: renderizar
             renderQuestion(pregunta);
             document.getElementById("main-message").textContent = `¡A Responder!`;
 
+            // 🔑 LLAMADA CLAVE: Iniciar el cronómetro
+            if (data.tiempoLimiteMs) {
+                iniciarCuentaRegresivaMovil(data.tiempoLimiteMs);
+            }
             // NOTA: Si ya votó (yaVoto es true), renderQuestion ya lo manejará
 
         } else if (preguntaActual) {
             // Ya tenemos la pregunta, solo actualizamos el mensaje si no hay voto
             if (!yaVoto) {
-                document.getElementById("main-message").textContent = "¡A Responder!";
+                document.getElementById("main-message").textContent = "¡A responder!";
+                // Iniciar el cronómetro
+                if (data.tiempoLimiteMs) {
+                    iniciarCuentaRegresivaMovil(data.tiempoLimiteMs);
+                }
             }
         }
     }
@@ -323,11 +428,11 @@ socket.on("error", (data) => {
         yaVoto = true;
         disableOptions(null);
         document.getElementById("voto-status").textContent = "Tu voto ya está registrado para esta pregunta.";
-    } else if ( data.msg === 'La pregunta aún no ha comenzado o ya finalizó.') {
+    } else if (data.msg === 'La pregunta aún no ha comenzado o ya finalizó.') {
         //no desacativa las opciones
 
 
-    
+
     } else {
         console.error("Error del servidor:", data.msg);
         document.getElementById("voto-status").textContent = data.msg;

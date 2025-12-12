@@ -5,10 +5,11 @@
 /* Variables de color para un manejo más fácil */
 :root {
     --honda-magenta: #e30a22;
-    --honda-red: #e30a22; 
-    --honda-gray-bg: #bbb; 
+    --honda-red: #e30a22;
+    --honda-gray-bg: #bbb;
 }
-.text-primary  {
+
+.text-primary {
     color: #e30a22 !important;
 }
 
@@ -22,8 +23,10 @@ body {
 
 /* El contenedor principal debe usar todo el ancho disponible en móvil */
 .container {
-    max-width: 100%; /* Usar todo el ancho disponible */
-    padding:  10px 10px 30px; /* Reducir padding horizontal */
+    max-width: 100%;
+    /* Usar todo el ancho disponible */
+    padding: 10px 10px 30px;
+    /* Reducir padding horizontal */
     background-color: var(--honda-red);
     min-height: 60vh;
     border-bottom: 6px solid #fff;
@@ -35,7 +38,8 @@ body {
 /* ----------------------------------------------------------- */
 
 .header-honda {
-    background-color: var(--honda-magenta); /* Magenta de acento (para la marca) */
+    background-color: var(--honda-magenta);
+    /* Magenta de acento (para la marca) */
     color: white;
     padding: 10px 0;
     position: relative;
@@ -45,10 +49,12 @@ body {
     /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     */
 }
+
 .img-logo {
     max-height: 20vh;
 
 }
+
 /* FOOTER: */
 .footer {
     min-height: 4vh;
@@ -79,12 +85,13 @@ body {
     border-radius: 30px;
 
 }
+
 #pregunta-texto {
     /* Hacer el texto de la pregunta más grande para móvil */
     font-size: 1.7rem;
-    line-height: 1.1em; 
+    line-height: 1.1em;
     font-weight: bold;
-    margin-bottom: 25px; 
+    margin-bottom: 25px;
     text-align: center;
 
 }
@@ -93,17 +100,21 @@ body {
     /* Aumentar el tamaño del padding para hacerlo más táctil */
     display: block;
     width: 100%;
-    padding: 20px 15px; /* Más padding vertical */
+    padding: 20px 15px;
+    /* Más padding vertical */
     margin: 12px 0;
-    font-size: 1.3rem; /* Letra más grande */
-    border-radius: 6px; /* Bordes ligeramente suaves para mobile */
+    font-size: 1.3rem;
+    /* Letra más grande */
+    border-radius: 6px;
+    /* Bordes ligeramente suaves para mobile */
     transition: transform 0.2s, background-color 0.2s;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Sombra sutil */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    /* Sombra sutil */
 }
 
 .btn-opcion:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* Estilo para botón seleccionado/desactivado */
@@ -114,6 +125,7 @@ body {
     opacity: 0.8;
     cursor: not-allowed;
 }
+
 .btn-opcion.btn-secondary:disabled {
     background-color: #f9f9f9 !important;
     border-color: #6c757d !important;
@@ -128,9 +140,9 @@ body {
 
 #modalIngreso .modal-title {
 
-    font-size:2em !important;
+    font-size: 2em !important;
     text-align: center !important;
-    font-size:1.6em;
+    font-size: 1.6em;
     display: block;
     width: 100%;
 }
@@ -141,14 +153,16 @@ body {
 
 /* Botón Primary (Usado para 'Comenzar' en el modal) */
 .btn-primary {
-    background-color: var(--honda-red); /* Fondo Rojo */
+    background-color: var(--honda-red);
+    /* Fondo Rojo */
     border-color: var(--honda-red);
-    color: white; /* Texto Blanco */
+    color: white;
+    /* Texto Blanco */
 }
 
 .btn-primary:hover {
     /* Oscurecer un poco el rojo al pasar el ratón */
-    background-color: #C62828; 
+    background-color: #C62828;
     border-color: #C62828;
     color: white;
 }
@@ -160,7 +174,8 @@ body {
 
 /* Mejorar el estilo visual de los botones de Bootstrap en general */
 .btn {
-    border-radius: 6px !important; /* Aplicar el mismo radio suave */
+    border-radius: 6px !important;
+    /* Aplicar el mismo radio suave */
     font-weight: bold;
 }
 
@@ -168,9 +183,17 @@ body {
 .animate-in {
     animation: fadeIn 0.5s ease-out;
 }
+
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 #inputNombre {
@@ -182,22 +205,27 @@ body {
 
 /* Contenedor principal (reemplaza al spinner-border) */
 .spinner-modern {
-    display: flex; /* Asegura que los puntos estén en línea */
+    display: flex;
+    /* Asegura que los puntos estén en línea */
     justify-content: center;
     align-items: center;
-    width: 200px; /* Ancho total del área de animación */
-    height: 50px; /* Altura total del área de animación */
-    margin: 15px auto; /* Centrar horizontalmente */
+    width: 200px;
+    /* Ancho total del área de animación */
+    height: 50px;
+    /* Altura total del área de animación */
+    margin: 15px auto;
+    /* Centrar horizontalmente */
 }
 
 .dot {
     width: 60px;
     height: 60px;
     margin: 0 4px;
-    background-color: #ffffff; /* Color primario de Honda o Bootstrap */
+    background-color: #ffffff;
+    /* Color primario de Honda o Bootstrap */
     border-radius: 60%;
     /* Añadir una pequeña escala inicial para la animación */
-    transform: scale(0); 
+    transform: scale(0);
     animation: bounce 2.2s infinite ease-in-out both;
     /*
     border: 4px solid #000;
@@ -217,10 +245,90 @@ body {
 
 /* Definición de la animación de rebote */
 @keyframes bounce {
-    0%, 80%, 100% { 
-        transform: scale(0); /* Estado inicial: pequeño/oculto */
-    } 
-    40% { 
-        transform: scale(1.0); /* Estado medio: grande/visible */
+
+    0%,
+    80%,
+    100% {
+        transform: scale(0);
+        /* Estado inicial: pequeño/oculto */
     }
+
+    40% {
+        transform: scale(1.0);
+        /* Estado medio: grande/visible */
+    }
+}
+
+/* para el timer */
+.timer-container {
+    display: flex;
+    align-items: center;
+    background-color: var(--secondary-color, #edd034);
+    /* Asegura que el color de destaque esté definido */
+    color: var(--primary-bg, #a80417);
+    /* Color oscuro */
+    padding: 8px 15px;
+    /* Más pequeño para el móvil */
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 1.5rem;
+    /* Tamaño adecuado para el móvil */
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    transform-origin: center;
+    transition: all 0.3s ease;
+}
+
+.timer-icon {
+    font-size: 2rem;
+    margin-right: 10px;
+    animation: oscilar 1s ease-in-out infinite alternate;
+}
+
+/* Usamos una clase en el body para activar el pulso solo durante la pregunta */
+body.timer-active-mobile .timer-container {
+    animation: pulsar 1.5s ease-in-out infinite;
+}
+
+
+body.timer-active-mobile .timer-container.fast {
+    animation: pulsar 0.5s ease infinite;
+}
+
+/* --- ANIMACIONES --- */
+
+/* 1. Efecto de Pulso (Tamaño) */
+@keyframes pulsar {
+    0% {
+        transform: scale(1.0);
+        box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+    }
+
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 15px var(--secondary-color, #edd034);
+    }
+
+    100% {
+        transform: scale(1.0);
+        box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+    }
+}
+
+/* 2. Efecto de Oscilación (Rotación) */
+@keyframes oscilar {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    50% {
+        transform: rotate(2deg);
+    }
+
+    100% {
+        transform: rotate(-2deg);
+    }
+}
+
+.container .row {
+    --bs-gutter-x: 0 !important;
 }

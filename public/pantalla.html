@@ -94,11 +94,11 @@
             font-weight: 700;
         }
 
-        /* 2. Placa Pregunta (Estructura 60/40) */
+        /* 2. Placa Pregunta (Estructura 30/20/50) */
 
-        /* Fila 1 (60% Alto): Contenedor de la Pregunta */
+        /* Fila 1: Contenedor de la Pregunta */
         #placa-pregunta .row:first-child {
-            height: 40%;
+            height: 30%;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -489,6 +489,96 @@
                 opacity: 1;
             }
         }
+
+
+        /* timer */
+        /* pantalla.html (dentro de <style>) */
+
+        /* --- ESTILOS DEL CRONÓMETRO --- */
+
+        .timer-container {
+            display: flex;
+            align-items: center;
+            background-color: var(--secondary-color);
+            /* Color amarillo/oro */
+            color: var(--primary-bg);
+            /* Color rojo oscuro */
+            padding: 2px 25px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 5vh;
+            /* Tamaño grande para la pantalla */
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            transform-origin: center;
+            /* Punto de pivote para las animaciones */
+            transition: all 0.3s ease;
+            min-height: 20%;
+        }
+
+        .timer-container.d-none {
+            display: flex !;
+            opacity: 0;
+        }
+
+
+        .timer-icon {
+            font-size: 1.1em;
+            margin-right: 15px;
+            animation: oscilar 1s ease-in-out infinite alternate;
+            transition: all 0.5s ease;
+            /* Inicia la oscilación */
+        }
+
+        .timer-active .timer-container {
+            animation: pulsar 2.0s ease infinite;
+            /* Inicia el pulso cuando está activo */
+        }
+
+        .timer-active .timer-container.fast {
+            animation: pulsar 0.5s ease infinite;
+         }
+
+        /* ancho fijo de los segundos */
+        .timer-text {
+            text-align: center;
+        }
+
+
+
+        /* --- ANIMACIONES --- */
+
+        /* 1. Efecto de Pulso (Tamaño) */
+        @keyframes pulsar {
+            0% {
+                transform: scale(1.0);
+                box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            }
+
+            50% {
+                transform: scale(1.1);
+                box-shadow: 0 0 30px var(--secondary-color);
+            }
+
+            100% {
+                transform: scale(1.0);
+                box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            }
+        }
+
+        /* 2. Efecto de Oscilación (Rotación) */
+        @keyframes oscilar {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            50% {
+                transform: rotate(2deg);
+            }
+
+            100% {
+                transform: rotate(-2deg);
+            }
+        }
     </style>
 </head>
 
@@ -511,11 +601,24 @@
 
             <div class="row flex-grow-1"
                 style="align-items: center; justify-content: center; text-align: center; padding: 0 5rem;">
+
+
                 <div class="col-12">
                     <h2 id="pregunta-texto" class="display-3"></h2>
-                    <p class="mt-4 destacado lead" id="pregunta-status">¡Tiempo para responder!</p>
+                    <p class="mt-4 destacado lead d-none" id="pregunta-status"></p>
+
                 </div>
             </div>
+
+            <div class="row justify-content-center my-4" style="height: 10%;">
+                <div class="col-auto">
+                    <div id="countdown-timer" class="timer-container d-none">
+                        <i class="bi bi-hourglass hourglass-split"></i>
+                        <span id="timer-display" class="timer-text">--</span>
+                    </div>
+                </div>
+            </div>
+
 
             <div id="opciones-row" class="row">
                 <div id="opciones-container" class="col-12"></div>
@@ -549,6 +652,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
 
     <script>
@@ -664,7 +768,7 @@
 
                 correctOptionContainer.classList.add('correcta');
                 correctOptionContainer.classList.add('seleccionada'); // Aplicamos ambas clases al mismo tiempo
-                document.getElementById("pregunta-status").textContent = `Respuesta Correcta: ${respuestaCorrecta}`;
+                //document.getElementById("pregunta-status").textContent = `Respuesta Correcta: ${respuestaCorrecta}`;
             }
         }
 
@@ -907,8 +1011,67 @@
             }, finalTimeout);
         }
 
+        let countdownInterval = null;
+        const timerContainer = document.getElementById('countdown-timer');
+        const timerDisplay = document.getElementById('timer-display');
 
 
+        function detenerCuentaRegresiva() {
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+            }
+            // Ocultar el timer y remover la clase de animación
+            //timerContainer.classList.add('d-none');
+            
+            document.body.classList.remove('timer-active');
+            /*en el contador escribe "se terminó el tiempo!":*/
+            timerContainer.classList.remove('fast');
+            timerDisplay.textContent = "¡Se terminó el tiempo!";
+            
+        }
+
+        /**
+         * Inicia la cuenta regresiva visible en pantalla.
+         * @param {number} tiempoMs - Tiempo límite en milisegundos.
+         */
+        function iniciarCuentaRegresiva(tiempoMs) {
+            // 1. Detener cualquier timer anterior
+            detenerCuentaRegresiva();
+
+            // 2. Mostrar el timer y activar las animaciones
+            timerContainer.classList.remove('d-none');
+            timerContainer.classList.remove('fast');
+            document.body.classList.add('timer-active');
+
+            // 3. Inicializar el tiempo en segundos
+            let segundosRestantes = Math.floor(tiempoMs / 1000);
+            timerDisplay.textContent = segundosRestantes;
+
+            // 4. Iniciar el intervalo de 1 segundo
+            countdownInterval = setInterval(() => {
+                segundosRestantes--;
+
+                if (segundosRestantes >= 0) {
+                    timerDisplay.textContent = segundosRestantes;
+                }
+
+                // acelera faltando 5 segundos
+                if (segundosRestantes <= 4) {
+                    timerContainer.classList.add('fast');
+                }
+
+
+                // 5. Condición de finalización
+                if (segundosRestantes <= 0) {
+                    detenerCuentaRegresiva();
+
+                    // 💡 Aquí puedes agregar alguna animación o sonido al terminar el tiempo
+                    console.log("¡Tiempo agotado!");
+                }
+
+            }, 1000); // 1000 ms = 1 segundo
+        }
 
         // 🔑 HANDLERS DE SOCKET.IO
 
@@ -918,16 +1081,19 @@
             console.log("data recibida: ", data);
             // data debe contener { id, texto_pregunta, opciones: [...] }
             renderQuestion(data);
+            iniciarCuentaRegresiva(data.tiempoLimiteMs);
         });
 
         // 🔑 Modificado para usar la función de TOGGLE unificada
         socket.on('revelar_respuesta', (data) => {
+            detenerCuentaRegresiva(); // Detener la cuenta regresiva
             // Asume que la data ya está cargada y el comando es para alternar
             console.log("Comando 'revelar_respuesta' recibido por Socket.IO. Alternando destaque.");
             toggleRespuestaCorrecta();
         });
 
         socket.on('mostrar_ranking_procesando', () => {
+            detenerCuentaRegresiva(); // Detener la cuenta regresiva
             switchView('placaRanking');
         });
 

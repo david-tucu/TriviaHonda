@@ -179,26 +179,42 @@ io.on('connection', async socket => { // 🔑 CAMBIO 1: HACER LA FUNCIÓN ASÍNC
 
       case 'mostrarPregunta':
 
-        preguntaActivaId = payload;
+        const { preguntaId, tiempoMs } = payload;
+
+        preguntaActivaId = preguntaId;
+
         const pregunta = getPreguntaPorId(preguntaActivaId);
 
         if (pregunta) {
+
           tiempoInicioPregunta = Date.now();
+
+          preguntaTiempoLimiteMs = tiempoMs; // 🔑 NUEVO: Guardar el tiempo globalmente (si aplica)
+
 
           // 🔑 LUGAR 2: FIX ESCALABILIDAD - Guardar el estado en Redis
           await redisClient.set(REDIS_STATE_KEY, JSON.stringify({
             preguntaId: preguntaActivaId,
             timestamp: tiempoInicioPregunta,
-            status: 'aResponder'
+            status: 'aResponder',
+            tiempoLimiteMs: tiempoMs,
           }), { EX: 3600 }); // Expira en 1 hora por seguridad
 
 
           // 1. Emitir a la PANTALLA
           broadcastEvent = 'mostrar_pregunta';
-          broadcastPayload = { ...getPreguntaSinRespuesta(pregunta), respuestaCorrecta: pregunta.correcta };
+          broadcastPayload = {
+            ...getPreguntaSinRespuesta(pregunta),
+            respuestaCorrecta: pregunta.correcta,
+            tiempoLimiteMs: tiempoMs,
+          };
 
           // 2. Emitir al MÓVIL (estadoJuego)
-          io.emit('estadoJuego', { status: 'aResponder', pregunta: broadcastPayload });
+          io.emit('estadoJuego', {
+            status: 'aResponder',
+            pregunta: broadcastPayload,
+            tiempoLimiteMs: tiempoMs
+          });
 
           socket.emit('actionConfirmed', { action, success: true });
         } else {
@@ -263,14 +279,20 @@ io.on('connection', async socket => { // 🔑 CAMBIO 1: HACER LA FUNCIÓN ASÍNC
   // Asegúrate de que tu 'pool' de PostgreSQL esté importado correctamente
 
   socket.on('respuesta', async (data) => {
+
+    console.log('Respuesta recibida:', data);
+
     const { dni, id_pregunta, respuesta, nombre } = data;
 
-    // 🔑 LUGAR 4: LEER ESTADO CONSISTENTE DESDE REDIS (Fuente de verdad en escalado)
+    //LEER ESTADO CONSISTENTE DESDE REDIS (Fuente de verdad en escalado)
     let tiempoInicioReal = null;
     let preguntaActivaReal = null;
 
     try {
+      console.log("intento leer estado de redis...");
+
       const estadoStr = await redisClient.get(REDIS_STATE_KEY);
+      console.log("intento leer estado de redis: " + estadoStr);
       if (estadoStr) {
         const estado = JSON.parse(estadoStr);
         if (estado.status === 'aResponder') {
@@ -289,12 +311,14 @@ io.on('connection', async socket => { // 🔑 CAMBIO 1: HACER LA FUNCIÓN ASÍNC
 
     // VALIDACIÓN CRUCIAL: Asegurarse de que el tiempo de inicio existe
     if (tiempoInicioReal === null) {
+      console.error("error en tiempo de inicio");
       socket.emit('error', { msg: 'La pregunta aún no ha comenzado o ya finalizó.' });
       return;
     }
 
     // El ID de la pregunta debe coincidir con el ID activo (de Redis o Fallback)
     if (preguntaActivaReal === null || id_pregunta !== preguntaActivaReal) {
+      console.error("error en pregunta activa");
       socket.emit('error', { msg: 'No hay pregunta activa o ID incorrecto.' });
       return;
     }

@@ -27,23 +27,41 @@
     <div class="contenedor-img-header"><img src="img/logo-honda.png" class="img-logo" alt=""></div>
   </header>
 
-  <div class="container">
-    <div id="status-area" class="text-center mt-4">
-      <h2 id="main-message">Esperando conexión...</h2>
-      <div id="spinner" class="spinner-modern d-none" role="status">
-        <div class="dot"></div>
-        <div class="dot"></div>
-        <div class="dot"></div>
+  <div class="container d-flex align-items-center flex-grow-1">
+    <div class="row w-100">
+      <div class="col-12 px-0">
+
+        <div id="status-area" class="text-center mt-0">
+          <h2 id="main-message">Esperando conexión...</h2>
+          <div id="spinner" class="spinner-modern d-none" role="status">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
+        </div>
+
+
+        <div class="row justify-content-center my-3">
+          <div class="col-auto">
+            <div id="countdown-timer-mobile" class="timer-container d-none">
+              <i class="bi  bi-hourglass hourglass-split mx-2"></i>
+              <span id="timer-display-mobile" class="timer-text">--</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="pregunta-area" class="card p-4 mt-0 animate-in text-center" style="display:none;">
+          <p id="pregunta-texto"></p>
+
+
+
+          <div id="opciones-container">
+          </div>
+          <small class="mt-3 text-muted" id="voto-status"></small>
+        </div>
+
       </div>
     </div>
-
-    <div id="pregunta-area" class="card p-4 mt-0 animate-in text-center" style="display:none;">
-      <p id="pregunta-texto"></p>
-      <div id="opciones-container">
-      </div>
-      <small class="mt-3 text-muted" id="voto-status"></small>
-    </div>
-
   </div>
 
   <div class="footer"></div>
