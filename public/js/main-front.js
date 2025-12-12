@@ -215,17 +215,28 @@ function disableOptions(btnSeleccionado) {
 
 /** Vuelve a la portada de espera */
 function volverAportada(message) {
+
+    // Detener cualquier cuenta regresiva activa
+    detenerCuentaRegresivaMovil();
+    
+
     preguntaActual = null;
     yaVoto = false;
     document.getElementById("pregunta-area").style.display = "none";
     document.getElementById("main-message").textContent = message || "Esperando pregunta...";
     document.getElementById("spinner").classList.remove('d-none');
+
+    
 }
 
 
 // --- COMUNICACIÓN CON EL SERVIDOR ---
 
 function enviarRespuesta(opcion, btnSeleccionado) {
+
+    //detiene el timer:
+    detenerCuentaRegresivaMovil();
+
     if (!preguntaActual || yaVoto) {
         document.getElementById("voto-status").textContent = "Ya votaste en esta pregunta o la pregunta ha terminado.";
         return;
