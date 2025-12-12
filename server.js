@@ -601,7 +601,7 @@ async function getRanking(pool, limit_ = 20) {
                         CASE 
                             WHEN r.es_correcta = TRUE THEN 
                                 (2000) + 
-                                (GREATEST(0, (CAST(${TIEMPO_MAXIMO_MS} AS NUMERIC) - r.tiempo_respuesta))) / 40.0
+                                (GREATEST(-3000, (CAST(${TIEMPO_MAXIMO_MS} AS NUMERIC) - r.tiempo_respuesta))) / 40.0
                             ELSE 
                                 0 
                         END
