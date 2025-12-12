@@ -634,6 +634,14 @@ async function getRanking(pool, limit_ = 20) {
                 puntaje_final DESC
             LIMIT $1;
         `, [limitValue]);
+    
+        //recorro las posiciones para sobrescribir 1,2,3,4,5... a pesar de empates
+        let displayRank = 0;
+        
+        rankingResult.rows.forEach(row => {
+          displayRank++;
+          row.posicion = displayRank;
+        });
 
     return rankingResult.rows;
 
