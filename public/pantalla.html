@@ -211,6 +211,7 @@
 
         /* 3. Ranking */
 
+        /* Títulos y Subtítulos */
         #revela-ranking .display-2 {
             font-size: 6vh;
         }
@@ -219,58 +220,99 @@
         #revela-ranking .lead {
             font-size: 3vh;
             text-transform: uppercase;
+            font-weight: 300;
+            /* Aseguramos que el lead no sea demasiado pesado */
         }
 
+
+        /* 1. Contenedor Principal (rankingList) */
         #ranking-list {
-            list-style: none;
+            /* Ya no es una UL, sino el contenedor de la ROW */
             padding: 0;
-            width: 80%;
-            max-width: 900px;
+            width: 96%;
+            /* Aseguramos que el contenido esté centrado dentro del contenedor */
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
+
+        /* 2. Estilo de cada Ítem del Ranking (.rank-item) */
         .rank-item {
+            /* Estilos de visualización y Layout */
             display: flex;
             justify-content: space-between;
-            font-size: 2.3vh;
-            /* Tamaño del ranking ajustado a la vista */
-            padding: 0 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            transition: background-color 0.3s;
-        }
+            align-items: center;
 
-        .rank-item:nth-child(1) {
+            /* Tipografía y Espaciado */
             font-size: 3.3vh;
-            color: var(--secondary-color);
+            padding: 0.5vh 0;
+            margin-bottom: 0.5vh;
+
+            /* Separador */
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+            /* Animación de entrada */
+            opacity: 0;
+            transform: translateY(10px);
+            /* Velocidad de la animación (ajustada para ser coherente con el JS) */
+            transition: opacity 0.2s ease-out, transform 0.2s ease-out;
         }
 
-        .rank-item:nth-child(2) {
-            font-size: 2.8vh;
-        }
-
+        /* El último ítem de la columna no debe tener borde inferior */
+        /* Nota: Como el JS inyecta en dos columnas, este selector sólo aplicará al último de cada columna si el contenedor es el correcto */
         .rank-item:last-child {
             border-bottom: none;
         }
 
-        .rank-pos {
-            color: var(--secondary-color);
-            font-weight: 700;
-            width: 10%;
-            text-align: right;
-            padding-right: 20px;
+        /* 3. Animación de revelación */
+        .rank-item.show {
+            opacity: 1;
+            transform: translateY(0);
         }
 
+
+        /* 4. Estilos de las Partes Internas del Ítem */
+
+        /* Posición (Columna de la izquierda) */
+        .rank-pos {
+            width: 15%;
+            /* Ajustado un poco más ancho para centrar mejor el número */
+            text-align: right;
+            padding-right: 8px;
+            font-weight: 700;
+            color: var(--secondary-color);
+            box-sizing: content-box;
+        }
+
+        /* Nombre (Columna del medio) */
         .rank-name {
             width: 60%;
             text-transform: uppercase;
-            font-weight: 700
+            font-weight: 700;
+            /* Manejo de desbordamiento de texto */
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+            text-align: left;
+            /* Aseguramos que el nombre inicie a la izquierda */
+        }
+        .rank-dni {
+            font-weight: lighter;
         }
 
+        /* Puntaje (Columna de la derecha) */
         .rank-score {
-            width: 30%;
+            width: 25%;
             text-align: right;
             font-weight: 700;
+            color: var(--secondary-color);
         }
 
+        /* Clase de destaque genérica (si se usa en otro lugar) */
+        .destacado {
+            color: var(--secondary-color);
+        }
 
         #revela-ranking {
             /* Aseguramos que la animación de confetti se limite a esta vista */
@@ -536,7 +578,7 @@
 
         .timer-active .timer-container.fast {
             animation: pulsar 0.5s ease infinite;
-         }
+        }
 
         /* ancho fijo de los segundos */
         .timer-text {
@@ -636,12 +678,12 @@
         <div id="revela-ranking" class="view">
             <div id="confetti-background" class="confetti-background"></div>
 
-            <h1 class="display-2 mb-4 destacado  text-wave" style="z-index: 2;">¡LOS GANADORES Y LAS GANADORAS!</h1>
-            <h3 class="lead mb-5 text-center text-uppercase" style="z-index: 2;">
+            <h1 class="display-2 pt-4 destacado  text-wave" style="z-index: 2;">¡LOS GANADORES Y LAS GANADORAS!</h1>
+            <h3 class="lead mb-1 text-center text-uppercase" style="z-index: 2;">
                 Contestaron con mayor precisión y en menor tiempo</h3>
-            <ul id="ranking-list" class="list-unstyled" style="z-index: 2;">
-                <li class="rank-item text-center">Cargando...</li>
-            </ul>
+            <div id="ranking-list" class="flex-grow-1 d-flex justify-content-center align-items-center">
+                <div class="rank-item text-center">Cargando...</div>
+            </div>
         </div>
 
     </div>
@@ -775,61 +817,85 @@
         /** Renderiza la lista de ranking (Ganadores) uno a uno. */
         function renderRanking(rankingData) {
 
-            // 1. Iniciar la animación de Confetti (Usamos la función coordinadora)
-            triggerMultipleConfetti(); // ⬅️ ¡CAMBIO A ESTA FUNCIÓN!
+            // Suponiendo que 'rankingList' es el contenedor donde inyecta el HTML (un DIV en el HTML)
+            // Si actualmente es un UL, DEBE cambiarlo a un DIV en el HTML de pantalla.html.
+
+            // 1. Iniciar la animación de Confetti
+            triggerMultipleConfetti();
 
 
-            rankingList.innerHTML = ''; // Limpiar lista
+            rankingList.innerHTML = ''; // Limpiar contenedor
 
-            const maxWinners = 17;
-            const displayData = rankingData.slice(0, maxWinners);
+            const maxWinners = 20;
+            let displayData = rankingData.slice(0, maxWinners);
 
-            //comleta hasta maxWinners con "nn":
+            // Completa hasta maxWinners con "nn":
             while (displayData.length < maxWinners) {
-                displayData.push({ posicion: displayData.length + 1, nombre: "", dni:"", puntaje_final: "" });
+                displayData.push({ posicion: displayData.length + 1, nombre: "...", dni: null, puntaje_final: "---" });
             }
 
-
-
             if (displayData.length === 0) {
-                rankingList.innerHTML = '<li class="rank-item text-center show">No hay ganadores con puntaje válido todavía.</li>';
+                // Si está vacío después de completar, puede ser un error, aunque la lógica lo evita
+                rankingList.innerHTML = '<div class="text-center show">No hay ganadores con puntaje válido todavía.</div>';
                 switchView('revelaRanking');
                 return;
             }
 
             switchView('revelaRanking');
 
-            // 2. Iterar y mostrar cada ganador con retraso
-            displayData.forEach((item, index) => {
+            // 🔑 NUEVO: ESTRUCTURA DE DOS COLUMNAS DE BOOTSTRAP
 
-                if ( item.dni ) {
-                    //puntos suspensivos y los ultimos 3 digitos del dni
-                    item.dni_mask = item.dni.slice(-3);
-                } else {
-                    item.dni_mask = "###";
-                }
-                
-                const li = document.createElement('li');
-                li.className = 'rank-item'; // Inicialmente oculto por el CSS
+            // Creamos un DIV que será la fila principal
+            const rowContainer = document.createElement('div');
+            rowContainer.className = 'row w-100'; // w-100 para asegurar que ocupe todo el ancho
 
-                const liContent = `
-                    <span class="rank-pos">${item.posicion}.</span> 
-                    <span class="rank-name">${item.nombre} (${item.dni_mask})</span> 
-                    <span class="rank-dni"></span> 
-                    <span class="rank-score">${item.puntaje_final}</span>
-                `;
-                li.innerHTML = liContent;
-                rankingList.appendChild(li);
+            // Creamos las dos columnas de 10 ítems (col-6 para que ocupen 50% cada una)
+            const col1 = document.createElement('div');
+            col1.className = 'col-6 px-4'; // Columna izquierda
 
-                // 3. Mostrar el ítem después de un breve retraso
-                const delay = 1300 + index * 300; // 300ms base + 100ms por ítem (ajusta a tu gusto)
+            const col2 = document.createElement('div');
+            col2.className = 'col-6 px-4'; // Columna derecha
 
-                setTimeout(() => {
-                    li.classList.add('show');
-                }, delay);
-            });
+            // Dividir la data: Columna 1 = ítems 0-9 | Columna 2 = ítems 10-19
+            const dataCol1 = displayData.slice(0, 10);
+            const dataCol2 = displayData.slice(10, maxWinners);
+
+            // 2. Función auxiliar para renderizar la columna
+            const renderColumn = (columnElement, data, startDelay) => {
+                data.forEach((item, index) => {
+
+                    // Manejo del DNI (si es null, lo pone como '###')
+                    const dniMask = item.dni ? '[' + item.dni.slice(-3) + ']' : '[···]';
+
+                    const li = document.createElement('div'); // Usamos DIV en lugar de LI para Flexbox/Grid
+                    li.className = 'rank-item'; // Clase de estilo ya definida
+
+                    const liContent = `
+                        <span class="rank-pos">${item.posicion}.</span> 
+                        <span class="rank-name"><span class="rank-dni">${dniMask}</span> ${item.nombre}</span> 
+                        <span class="rank-score">${item.puntaje_final}</span>
+                    `;
+                    li.innerHTML = liContent;
+                    columnElement.appendChild(li);
+
+                    // 3. Mostrar el ítem con retraso
+                    const delay = startDelay + index * 300;
+
+                    setTimeout(() => {
+                        li.classList.add('show');
+                    }, delay);
+                });
+            };
+
+            // 4. Renderizar ambas columnas
+            renderColumn(col1, dataCol1, 0); // La columna 1 inicia inmediatamente
+            renderColumn(col2, dataCol2, 10 * 300); // La columna 2 inicia después de que la 1 haya terminado
+
+            // 5. Ensamblar y adjuntar al DOM
+            rowContainer.appendChild(col1);
+            rowContainer.appendChild(col2);
+            rankingList.appendChild(rowContainer);
         }
-
 
 
         /** Genera la grilla de círculos con retrasos aleatorios para parpadeo sutil. */
@@ -1032,12 +1098,12 @@
             }
             // Ocultar el timer y remover la clase de animación
             //timerContainer.classList.add('d-none');
-            
+
             document.body.classList.remove('timer-active');
             /*en el contador escribe "se terminó el tiempo!":*/
             timerContainer.classList.remove('fast');
             timerDisplay.textContent = "¡Se terminó el tiempo!";
-            
+
         }
 
         /**

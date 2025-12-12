@@ -163,7 +163,7 @@ io.on('connection', async socket => { //  CAMBIO 1: HACER LA FUNCIÓN ASÍNCRONA
       case 'mostrarRanking':
         try {
           //  1. Llama a la función de la DB para calcular el ranking
-          const rankingData = await getRanking(pool, 17);
+          const rankingData = await getRanking(pool, 20);
 
           // 1. Emitir a la PANTALLA
           broadcastEvent = 'revelar_ranking'; // ⬅️ Evento que pantalla.html escucha para renderRanking
@@ -460,7 +460,7 @@ app.get('/test-db-500', async (req, res) => {
 app.get('/ver-rank', async (req, res) => {
   try {
     //  USAMOS la función getRanking y le pasamos el objeto 'pool'
-    const rankingData = await getRanking(pool, 17); // 100 es un ejemplo de límite
+    const rankingData = await getRanking(pool, 20); // 100 es un ejemplo de límite
 
     res.json({
       ok: true,
@@ -503,9 +503,9 @@ app.get('/api/pregunta/:id', (req, res) => {
 
 
 // Asegúrate de que esta función está disponible en tu server.js o archivo de rutas
-async function getRanking(pool, limit_ = 17) {
+async function getRanking(pool, limit_ = 20) {
   // ... (Tu código de getRanking se mantiene igual) ...
-  const limitValue = parseInt(limit_, 10) || 17;
+  const limitValue = parseInt(limit_, 10) || 20;
 
   try {
     const rankingResult = await pool.query(`
