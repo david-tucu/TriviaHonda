@@ -399,7 +399,8 @@ io.on('connection', async socket => { //  CAMBIO 1: HACER LA FUNCIÓN ASÍNCRONA
 
 // --- Endpoints ---
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'front-temp.html'));
+  //res.sendFile(path.join(__dirname, 'public', 'front-temp.html'));
+  res.sendFile(path.join(__dirname, 'public', 'front-trivia.html'));
 });
 
 // ... (Resto de Endpoints y funciones se mantiene igual) ...
